@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+/* Tokens de EVA 40+ — derivados de FICHA-ARTE.md (referencia: Zenova). Cosa juzgada, no redecidir. */
+:root {
+  /* ====== SUPERFICIES ====== */
+  --surface-base: #fffefe;        /* Pure Ivory — fondo de página */
+  --surface-primary: #ffffff;     /* Cards, modales */
+  --surface-secondary: #edf1ef;   /* Secciones alternas */
+  --surface-tertiary: #dfe6e4;    /* Mist White — inputs, áreas recesadas */
+  --surface-elevated: #ffffff;
+  --surface-overlay: rgba(20, 38, 31, 0.55);
+  --surface-dark: #1e3a30;        /* bloque de énfasis (hero, footer) */
+  --surface-dark-2: #14261f;
+
+  /* ====== TEXTOS ====== */
+  --text-primary: #1a2e27;
+  --text-secondary: #3f5a50;
+  --text-tertiary: #7c8b84;
+  --text-inverse: #fffefe;
+  --text-on-dark-secondary: rgba(255, 254, 254, 0.75);
+
+  /* ====== BORDES ====== */
+  --border-default: #dfe6e4;
+  --border-strong: #cbd6d2;
+  --border-focus: var(--brand-primary);
+
+  /* ====== MARCA ====== */
+  --brand-primary: #205344;             /* Forest Teal */
+  --brand-primary-hover: #163b30;
+  --brand-primary-soft: rgba(32, 83, 68, 0.12);
+  --brand-primary-text: #fffefe;
+  --brand-secondary: #79988f;           /* Sage Green — 2ª nota */
+  --brand-gold: #e0c178;                /* detalle firma (marcador, medallón) */
+  --brand-accent: #ff7a59;              /* Coral — acento puntual de "vida" en la app interna (revisión consciente 2026-08-02, ver FICHA-ARTE.md) */
+  --brand-accent-soft: rgba(255, 122, 89, 0.14);
+
+  /* alias cortos usados por 14/16/29 */
+  --bg: var(--surface-base);
+  --surface: var(--surface-primary);
+  --text: var(--text-primary);
+  --accent: var(--brand-primary);
+
+  /* ====== ESTADOS SEMÁNTICOS ====== */
+  --status-success: #2f7d5e;
+  --status-success-soft: rgba(47, 125, 94, 0.12);
+  --status-error: #b54a3c;
+  --status-error-soft: rgba(181, 74, 60, 0.12);
+  --status-warning: #b8863b;
+  --status-warning-soft: rgba(184, 134, 59, 0.12);
+
+  /* ====== SOMBRAS (sutiles — la referencia casi no usa sombra dura) ====== */
+  --shadow-sm: 0 2px 8px rgba(20, 38, 31, 0.06);
+  --shadow-md: 0 8px 24px rgba(20, 38, 31, 0.1);
+  --shadow-lg: 0 18px 40px rgba(20, 38, 31, 0.16);
+  --shadow-overlay: 0 25px 60px rgba(20, 38, 31, 0.22);
+
+  /* ====== RADIOS (marca: cards grandes, ~24px) ====== */
+  --radius-sm: 0.5rem;    /* 8px — chips, badges */
+  --radius-md: 0.75rem;   /* 12px — inputs */
+  --radius-lg: 1rem;      /* 16px — botones */
+  --radius-xl: 1.5rem;    /* 24px — cards, modales, secciones */
+  --radius-2xl: 2rem;     /* 32px — bloques hero/oferta */
+  --radius-full: 9999px;
+
+  /* ====== TIPOGRAFÍA ====== */
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-body: var(--font-jakarta), system-ui, sans-serif;
+
+  /* ====== MOTION ====== */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.2, 0.64, 1);
+  --duration-fast: 150ms;
+  --duration-base: 300ms;
+  --duration-slow: 450ms;
+}
+
+@theme inline {
+  --color-surface-base: var(--surface-base);
+  --color-surface-primary: var(--surface-primary);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-tertiary: var(--surface-tertiary);
+  --color-surface-dark: var(--surface-dark);
+  --color-surface-dark-2: var(--surface-dark-2);
+
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-hover: var(--brand-primary-hover);
+  --color-brand-primary-soft: var(--brand-primary-soft);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-gold: var(--brand-gold);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-soft: var(--brand-accent-soft);
+
+  --color-txt-primary: var(--text-primary);
+  --color-txt-secondary: var(--text-secondary);
+  --color-txt-tertiary: var(--text-tertiary);
+  --color-txt-inverse: var(--text-inverse);
+  --color-txt-on-dark-secondary: var(--text-on-dark-secondary);
+
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+
+  --color-status-success: var(--status-success);
+  --color-status-success-soft: var(--status-success-soft);
+  --color-status-error: var(--status-error);
+  --color-status-error-soft: var(--status-error-soft);
+  --color-status-warning: var(--status-warning);
+  --color-status-warning-soft: var(--status-warning-soft);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  --ease-out: var(--ease-out);
+  --ease-spring: var(--ease-spring);
+}
+
+body {
+  background:
+    radial-gradient(120% 60% at 15% 0%, rgba(121, 152, 143, 0.08), transparent 55%),
+    var(--surface-base);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
