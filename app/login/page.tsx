@@ -57,7 +57,7 @@ export default function LoginPage() {
         <Reveal>
           <div className="flex justify-center">
             <Link href="/" aria-label="EVA 40+">
-              <Logo height={36} />
+              <Logo height={48} />
             </Link>
           </div>
 

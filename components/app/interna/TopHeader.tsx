@@ -7,7 +7,7 @@ import { Logo } from "@/components/app/ui/Logo";
 export function TopHeader({ titulo, logo = false }: { titulo: string; logo?: boolean }) {
   return (
     <div className="flex items-center justify-between px-4 pt-4">
-      {logo ? <Logo height={26} /> : <span className="font-display text-[15px] text-txt-primary">{titulo}</span>}
+      {logo ? <Logo height={34} /> : <span className="font-display text-[15px] text-txt-primary">{titulo}</span>}
       <Link
         href="/app/cuenta"
         aria-label="Cuenta y configuración"

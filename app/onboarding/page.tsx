@@ -241,7 +241,7 @@ export default function OnboardingPage() {
       {phase !== "welcome" && (
         <div className="relative flex items-center justify-center pt-4">
           <Link href="/" aria-label="EVA 40+">
-            <Logo height={32} />
+            <Logo height={42} />
           </Link>
         </div>
       )}

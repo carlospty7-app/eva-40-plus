@@ -101,7 +101,7 @@ export default function PaywallPage() {
         >
           <X className="h-5 w-5" />
         </Link>
-        <Logo height={30} />
+        <Logo height={38} />
         <div className="h-11 w-11" />
       </div>
 

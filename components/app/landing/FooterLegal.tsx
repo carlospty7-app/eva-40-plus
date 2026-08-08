@@ -13,7 +13,7 @@ export function FooterLegal() {
     <footer className="border-t border-border-default bg-surface-base px-6 py-10">
       <div className="mx-auto w-full max-w-[720px] text-center">
         <div className="flex justify-center">
-          <Logo height={32} />
+          <Logo height={44} />
         </div>
         <nav className="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-2 text-[12.5px] text-txt-tertiary">
           {links.map((l) => (
