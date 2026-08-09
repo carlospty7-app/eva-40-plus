@@ -1,5 +1,62 @@
 # ESTADO — EVA 40+
-Última actualización: 2026-08-09 | Sesión actual: 6 (auditoría exhaustiva hecha — 3 críticos corregidos y verificados)
+Última actualización: 2026-08-09 | Sesión actual: 6 CERRADA — Supabase real conectado, verificado en producción
+
+⏸️ CHECKPOINT — 2026-08-09 (noche): EVA 40+ ya tiene backend real. Ya no vive en `localStorage`.
+
+**Base de datos (proyecto Supabase `tblpjdgshwdxqyruqxmr`, vía MCP):**
+- Tablas: `profiles` (perfil+plan+racha), `checkins_diarios` (revisión diaria, único por usuaria+fecha),
+  `rutas_semanales` (creada con RLS pero AÚN NO SE USA — ver nota abajo).
+- RLS activo en las 3 con `(select auth.uid())`, políticas por comando. Advisor de seguridad: limpio
+  (se encontró y corrigió un `SECURITY DEFINER` público sin restringir — ya resuelto).
+- Trigger `on_auth_user_created`: cada cuenta nueva en `auth.users` crea su fila de `profiles` sola.
+- Verificado con `curl` sin sesión → la API devuelve `[]` (RLS bloqueando de verdad, no solo en teoría).
+
+**Código nuevo:** `lib/supabase/{client,server,queries}.ts` (cliente navegador/servidor + toda la
+capa de datos: perfil, checkins, `cargarEstadoSupabase` que arma el mismo shape que antes usaba
+localStorage), `proxy.ts` (reemplaza `middleware.ts` — Next 16 renombró la convención; protege
+`/app/*`, redirige a `/login` sin sesión). `lib/app/store.ts` se redujo a solo los 2 helpers puros
+que se siguen usando (`checkinDeHoy`, `diaRutaDeHoy`) — se borró todo lo que hablaba con localStorage,
+ya no se usaba.
+
+**Todas las pantallas de la app interna migradas** (Hoy, Mi Ruta, lista de compras, Progreso, EVA,
+Cuenta) — leen/escriben Supabase real, no localStorage. El login ahora crea cuentas reales y aplica
+el diagnóstico del onboarding (`metaLabel`/`dolorLabel`) al perfil real recién creado (antes solo
+pasaba en local, se perdía con Supabase si no se agregaba a mano — ya está).
+
+**3 bugs reales encontrados y corregidos DURANTE la construcción (no hipotéticos, con prueba en vivo):**
+1. El login intentaba `signUp` primero — pero Supabase no avisa con error claro cuando el correo YA
+   tiene cuenta (por anti-enumeración), así que alguien que volvía a entrar se quedaba atascado para
+   siempre en "revisa tu correo". Se invirtió el orden: `signInWithPassword` primero, `signUp` solo
+   si el login falla.
+2. "Cerrar sesión" en Cuenta solo cambiaba de pantalla, no llamaba a `supabase.auth.signOut()` — la
+   sesión seguía viva. Corregido.
+3. El `SECURITY DEFINER` del trigger de perfiles quedaba invocable públicamente vía RPC (hallazgo del
+   propio advisor de seguridad de Supabase) — se le revocó el `EXECUTE` a `anon`/`authenticated`.
+
+**Verificado de punta a punta con una cuenta real (creada por API admin para saltar el límite de
+envío de correos del plan gratis, usada y BORRADA después de cada prueba) — dos veces: una vez en
+local, otra vez en producción (`eva-40-plus.vercel.app`) después de que el usuario agregó las env
+vars a Vercel y le dio Redeploy:** registro → sesión real → revisión diaria → racha en la tabla real
+→ RLS bloqueando sin sesión → cierre de sesión real. `tsc` ✓ `build` ✓ en cada paso.
+
+**Limitaciones honestas que quedan (anotadas, no escondidas):**
+- `rutas_semanales` existe con RLS pero no se usa todavía — el contenido de Mi Ruta (misión/menú/
+  movimiento) se sigue generando en el cliente de forma determinística por día de semana; solo
+  `completado` ahora es real (se deriva de si existe un checkin ese día). No hacía falta duplicar
+  contenido generado en una tabla para esta vuelta — si más adelante Mi Ruta necesita contenido
+  personalizado por usuaria (no solo por día de la semana), ahí sí se usa esta tabla.
+- La foto de perfil se guarda como texto base64 directo en la columna `foto_url` (mismo criterio que
+  tenía en localStorage) — funciona, pero no es lo ideal a escala (fotos grandes = filas pesadas).
+  Lo correcto a futuro es Supabase Storage (un bucket) en vez de la columna de texto — no bloqueante
+  hoy, day sí vale la pena si crece la base de usuarias.
+- El envío de emails de confirmación usa el mailer por defecto de Supabase, que tiene un límite muy
+  bajo (se topó en las pruebas) — cuando haya usuarias reales de verdad, hay que configurar SMTP
+  propio (Resend, ya está en el plan del SO) para no toparse con ese límite en un lanzamiento real.
+- Google OAuth sigue sin conectar (botón deshabilitado a propósito, ver sesión anterior).
+
+Siguiente acción exacta: el usuario decide — ¿seguimos con Resend (para no toparnos con el límite de
+correos antes de vender) y el resto de la Secuencia Maestra (dominio, Hotmart), o esperamos primero
+los comentarios de Maru sobre la app ya con datos reales?
 
 ⏸️ CHECKPOINT — 2026-08-09: auditoría completa de la app (comando `/auditoria --exhaustivo`, corrida
 por pedido explícito del usuario "explora toda la app... corrige errores críticos por tu cuenta").
