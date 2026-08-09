@@ -1,5 +1,54 @@
 # ESTADO — EVA 40+
-Última actualización: 2026-08-09 (madrugada, tarde) | Sesión actual: 7 — Backoffice ampliado
+Última actualización: 2026-08-09 (noche) | Sesión actual: 7 — Backoffice ampliado + retención de producto
+
+⏸️ CHECKPOINT — 2026-08-09 (noche): el usuario pidió una evaluación honesta "como usuaria real"
+de si se quedaría pagando 6 meses. Se dieron 5 debilidades concretas (Mi Ruta no evoluciona, falta
+seguimiento hormonal/de ciclo — la razón de ser del nombre del producto, sin recetas/fotos reales,
+yoga incompleto, sin elemento humano). El usuario pidió resolver 4 de los 5 ya (los que no
+dependen de Maru) y RETOMAR el seguimiento de ciclo que estaba pausado:
+
+1. **Mi Ruta ya no es fija por día de semana** — `lib/app/engine.ts` (`calcularAdaptacionSemana`)
+   mira los últimos 7 días REALES de check-in; si una métrica viene mal en promedio (antojos,
+   sueño, digestión, inflamación, estrés), el día de HOY prioriza ese tema con contenido ya
+   redactado (reutiliza los bloques de `RUTA_TEMAS`, no inventa nada nuevo). Sin suficiente
+   historial (usuaria nueva), se queda con el plan por defecto.
+2. **EVA ahora tiene memoria real** — `/api/eva` pide server-side (con la sesión, no lo que mande
+   el cliente) los últimos 7 check-ins + notas y los últimos 14 registros de ciclo, y
+   `systemPrompt.ts` se los pasa como contexto. Ya no trata cada conversación como si arrancara de
+   cero. Probado en vivo.
+3. **Dato agregado real y honesto en Hoy** — `/api/comunidad` cuenta cuántas mujeres hicieron su
+   check-in hoy (agregado, sin PII); solo se muestra si son ≥2, para no decir "1 mujer" cuando esa
+   soy yo misma.
+4. **Copy mejorado** en los 3 días de movimiento sin video de Maru (2 caminatas + 1 movilidad) —
+   ya no se sienten como relleno, tienen pasos concretos.
+5. **✅ RETOMADO: seguimiento de ciclo hormonal.** Tabla `registros_ciclo` (RLS por usuaria) — es
+   un REGISTRO LIBRE día a día, a propósito NO un calendario de 28 días ni nada que le pida a la
+   usuaria predecir: a los 40+ la irregularidad por perimenopausia es normal y el sistema no la
+   trata como anomalía. UI en Progreso (`RegistroCicloCard`, colapsada por defecto, opcional
+   siempre). Correlación real (`insightsCiclo`): compara SUS propios días de sangrado vs. sin
+   sangrado en SUS check-ins reales, solo habla si hay ≥2 datos de cada lado. EVA usa este
+   contexto con tono empático/validante, nunca diagnostica — probado en vivo con "tengo sangrado y
+   me siento sensible, ¿es normal?" → respondió validando, mencionando la irregularidad normal a
+   los 40+, sin dar nada médico.
+
+🔍 Verificado: `tsc` ✓ `build` ✓ · probado en vivo con Playwright (registro de ciclo guardado real
+en la base, EVA respondiendo con el contexto correcto) · datos de prueba borrados al terminar.
+
+**Pendiente — quedan 2 de los 5 puntos originales, ambos dependen de Maru, no de más código:**
+- Recetas reales con pasos + fotos reales (necesita que Maru las escriba/mande, y confirme
+  licencia de las fotos del PDF).
+- Videos de yoga para los 3 días que faltan (Maru dijo que grabaría si hay tracción).
+
+**Idea nueva del usuario, en discusión, AÚN NO IMPLEMENTADA:** programa de desintoxicación de
+Maru por fases (mes 1 desinflamación base → jugos de zanahoria → keto → paleo) para alargar la
+retención a 6 meses mínimo. Se le explicó el riesgo real: la regla de seguridad ya existente dice
+que la jugoterapia SIEMPRE redirige a sesión con Maru, nunca la da la app sola (confirmado por el
+usuario en una sesión anterior) — un protocolo automático de jugos/keto sin pantalla de
+contraindicaciones sería un riesgo de salud real para una población 40-55 (diabetes, riñón,
+medicación). Propuesta hecha: Fase 1 automática, Fase 2+ (jugos/keto/paleo) se desbloquea solo
+tras una sesión real con Maru o un cuestionario serio de contraindicaciones. Esperando que el
+usuario confirme el enfoque antes de construir nada — el contenido de las 3 dietas también
+necesita salir de Maru (mismo bloqueo que las recetas).
 
 ⏸️ CHECKPOINT — 2026-08-09 (tarde): `/admin` pasó de una página larga a pestañas (Resumen · Ventas
 · Usuarios · Salud · Uso · Negocio · Costo de IA), a pedido del usuario que mandó una referencia
