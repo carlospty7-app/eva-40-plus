@@ -18,7 +18,9 @@ import type { LucideIcon } from "lucide-react";
 import { TopHeader } from "@/components/app/interna/TopHeader";
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
 import { PROTOCOLOS_EVA, recomendacionParaCheckin } from "@/lib/app/engine";
-import { cargarEstado, checkinDeHoy } from "@/lib/app/store";
+import { checkinDeHoy } from "@/lib/app/store";
+import { crearClienteNavegador } from "@/lib/supabase/client";
+import { cargarEstadoSupabase } from "@/lib/supabase/queries";
 import type { Checkin, EstadoDia } from "@/lib/app/types";
 
 type MensajeChat = { role: "user" | "assistant"; content: string };
@@ -49,13 +51,18 @@ export default function EvaPage() {
   const finChatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const estado = cargarEstado();
-    const checkin = checkinDeHoy(estado);
-    if (checkin) {
-      setCheckinHoy(checkin);
-      const rec = recomendacionParaCheckin(checkin);
-      setRecomendadoId(CAMPO_A_PROTOCOLO[rec.campoClave] ?? null);
-    }
+    const supabase = crearClienteNavegador();
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const estado = await cargarEstadoSupabase(supabase, data.user.id);
+      if (!estado) return;
+      const checkin = checkinDeHoy(estado);
+      if (checkin) {
+        setCheckinHoy(checkin);
+        const rec = recomendacionParaCheckin(checkin);
+        setRecomendadoId(CAMPO_A_PROTOCOLO[rec.campoClave] ?? null);
+      }
+    });
   }, []);
 
   useEffect(() => {

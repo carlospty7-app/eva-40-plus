@@ -176,6 +176,19 @@ export function temaPorIndiceDia(indice: number) {
   return RUTA_TEMAS[indice];
 }
 
+/** Genera los 7 días de la ruta de la semana actual (mismo contenido determinístico por
+ * día-de-semana que usa el seed de demo), marcando `completado` según checkins REALES de la
+ * usuaria — para usar con datos de Supabase en vez del historial de demo. */
+export function generarRutaSemanaReal(checkinsReales: Checkin[]): DiaRuta[] {
+  const fechasConCheckin = new Set(checkinsReales.map((c) => c.fecha));
+  return semanaActual(new Date()).map((fecha, i) => ({
+    dia: DIA_LABELS[i],
+    fecha: isoFecha(fecha),
+    ...RUTA_TEMAS[i],
+    completado: fechasConCheckin.has(isoFecha(fecha)),
+  }));
+}
+
 export function generarSeed(): EstadoApp {
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);

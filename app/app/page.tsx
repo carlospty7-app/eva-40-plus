@@ -11,10 +11,12 @@ import { CelebracionRacha } from "@/components/app/interna/CelebracionRacha";
 import { TapButton } from "@/components/app/onboarding/TapButton";
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
 import { ScoreRing } from "@/components/app/ui/ScoreRing";
-import { cargarEstado, checkinDeHoy, diaRutaDeHoy, registrarCheckinHoy } from "@/lib/app/store";
+import { checkinDeHoy, diaRutaDeHoy } from "@/lib/app/store";
 import { computeScoreDia, labelCampo, recomendacionParaCheckin } from "@/lib/app/engine";
 import { mensajeDiarioAleatorio } from "@/lib/app/mensajesMotivacionales";
 import { isoFecha } from "@/lib/app/dates";
+import { crearClienteNavegador } from "@/lib/supabase/client";
+import { cargarEstadoSupabase, registrarCheckinHoy as registrarCheckinSupabase } from "@/lib/supabase/queries";
 import type { EstadoApp, EstadoDia } from "@/lib/app/types";
 
 /** Tipos mínimos para la Web Speech API (no viene en el lib.dom.d.ts de TypeScript). */
@@ -56,18 +58,25 @@ export default function HoyPage() {
   const [celebracion, setCelebracion] = useState<"ninguna" | "diaria" | "racha">("ninguna");
   const [mensajeDiario, setMensajeDiario] = useState(mensajeDiarioAleatorio());
   const [semanaCompletaHoy, setSemanaCompletaHoy] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const cargado = cargarEstado();
-    setEstado(cargado);
-    const yaExiste = checkinDeHoy(cargado);
-    if (yaExiste) {
-      setResultadoHoy(yaExiste);
-      setNotas(yaExiste.notas ?? "");
-      setFase("resultado");
-    } else {
-      setFase("form");
-    }
+    const supabase = crearClienteNavegador();
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return; // el middleware ya redirige a /login antes de llegar aquí
+      setUserId(data.user.id);
+      const cargado = await cargarEstadoSupabase(supabase, data.user.id);
+      if (!cargado) return;
+      setEstado(cargado);
+      const yaExiste = checkinDeHoy(cargado);
+      if (yaExiste) {
+        setResultadoHoy(yaExiste);
+        setNotas(yaExiste.notas ?? "");
+        setFase("resultado");
+      } else {
+        setFase("form");
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -103,30 +112,36 @@ export default function HoyPage() {
     setGrabando(true);
   }
 
-  function confirmarCheckin() {
+  async function confirmarCheckin() {
     const eraEdicion = editando;
     setFase("analizando");
+    if (!estado || !userId) return;
+
+    const supabase = crearClienteNavegador();
+    const hoy = isoFecha(new Date());
+    const diasAntes = estado.rutaSemana.filter((d) => d.completado).length;
+    const { ok } = await registrarCheckinSupabase(supabase, userId, hoy, valores, notas);
+    const nuevo = await cargarEstadoSupabase(supabase, userId);
+    if (!nuevo) return;
+    const diasDespues = nuevo.rutaSemana.filter((d) => d.completado).length;
+
+    setEstado(nuevo);
+    setResultadoHoy(valores);
+    setAvisoGuardado(!ok);
+    setEditando(false);
+
+    // Se espera un poco antes de mostrar el resultado — misma sensación de "estamos calculando
+    // tu prioridad" que antes, ahora sobre datos reales en vez de un timeout artificial vacío.
     window.setTimeout(() => {
-      if (!estado) return;
-      const diasAntes = estado.rutaSemana.filter((d) => d.completado).length;
-      const { estado: nuevo, guardado } = registrarCheckinHoy(estado, valores, notas);
-      const diasDespues = nuevo.rutaSemana.filter((d) => d.completado).length;
-
-      setEstado(nuevo);
-      setResultadoHoy(valores);
-      setAvisoGuardado(!guardado);
-      setEditando(false);
-
       if (eraEdicion) {
         setFase("resultado");
         return;
       }
-
       setSemanaCompletaHoy(diasDespues === 7 && diasAntes < 7);
       setMensajeDiario(mensajeDiarioAleatorio());
       setCelebracion("diaria");
       setFase("resultado");
-    }, 650);
+    }, 400);
   }
 
   if (!estado || fase === "cargando") {
@@ -352,11 +367,19 @@ export default function HoyPage() {
                   </p>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (!estado || !resultadoHoy) return;
-                      const { estado: nuevo, guardado } = registrarCheckinHoy(estado, resultadoHoy);
-                      setEstado(nuevo);
-                      setAvisoGuardado(!guardado);
+                    onClick={async () => {
+                      if (!estado || !resultadoHoy || !userId) return;
+                      const supabase = crearClienteNavegador();
+                      const { ok } = await registrarCheckinSupabase(
+                        supabase,
+                        userId,
+                        isoFecha(new Date()),
+                        resultadoHoy,
+                        notas,
+                      );
+                      const nuevo = await cargarEstadoSupabase(supabase, userId);
+                      if (nuevo) setEstado(nuevo);
+                      setAvisoGuardado(!ok);
                     }}
                     className="shrink-0 text-[12px] font-semibold text-status-warning underline"
                   >

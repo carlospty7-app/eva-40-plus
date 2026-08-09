@@ -7,9 +7,10 @@ import { Lightbulb, TrendingDown, TrendingUp } from "lucide-react";
 import { TopHeader } from "@/components/app/interna/TopHeader";
 import { ScoreRing } from "@/components/app/ui/ScoreRing";
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
-import { cargarEstado } from "@/lib/app/store";
 import { computeScoreDia, insightsAutomaticos, labelCampo, recomendacionParaCheckin } from "@/lib/app/engine";
 import { formatoCorto } from "@/lib/app/dates";
+import { crearClienteNavegador } from "@/lib/supabase/client";
+import { cargarEstadoSupabase } from "@/lib/supabase/queries";
 import type { EstadoApp } from "@/lib/app/types";
 
 /** Punto del gráfico: el último día (hoy) se destaca más grande con un halo, el resto son
@@ -41,7 +42,12 @@ export default function ProgresoPage() {
   const [estado, setEstado] = useState<EstadoApp | null>(null);
 
   useEffect(() => {
-    setEstado(cargarEstado());
+    const supabase = crearClienteNavegador();
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const cargado = await cargarEstadoSupabase(supabase, data.user.id);
+      if (cargado) setEstado(cargado);
+    });
   }, []);
 
   const chartData = useMemo(() => {

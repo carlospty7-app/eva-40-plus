@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { Check, ChevronLeft } from "lucide-react";
 import { TopHeader } from "@/components/app/interna/TopHeader";
-import { cargarEstado } from "@/lib/app/store";
 import { listaDeComprasSemana } from "@/lib/app/engine";
+import { crearClienteNavegador } from "@/lib/supabase/client";
+import { cargarEstadoSupabase } from "@/lib/supabase/queries";
 import type { EstadoApp } from "@/lib/app/types";
 
 export default function ListaDeComprasPage() {
@@ -15,7 +16,12 @@ export default function ListaDeComprasPage() {
   const [marcados, setMarcados] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    setEstado(cargarEstado());
+    const supabase = crearClienteNavegador();
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const cargado = await cargarEstadoSupabase(supabase, data.user.id);
+      if (cargado) setEstado(cargado);
+    });
   }, []);
 
   if (!estado) {

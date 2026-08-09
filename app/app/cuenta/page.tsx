@@ -14,8 +14,9 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
-import { cargarEstado, guardarEstado } from "@/lib/app/store";
 import { formatoCorto } from "@/lib/app/dates";
+import { crearClienteNavegador } from "@/lib/supabase/client";
+import { actualizarPerfil as actualizarPerfilSupabase, cargarEstadoSupabase } from "@/lib/supabase/queries";
 import type { EstadoApp } from "@/lib/app/types";
 
 const LEGALES = [
@@ -31,18 +32,23 @@ export default function CuentaPage() {
   const [editandoNombre, setEditandoNombre] = useState(false);
   const [nombreTemp, setNombreTemp] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    setEstado(cargarEstado());
+    const supabase = crearClienteNavegador();
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      setUserId(data.user.id);
+      const cargado = await cargarEstadoSupabase(supabase, data.user.id);
+      if (cargado) setEstado(cargado);
+    });
   }, []);
 
-  function actualizarPerfil(cambios: Partial<EstadoApp["perfil"]>) {
-    setEstado((prev) => {
-      if (!prev) return prev;
-      const nuevo = { ...prev, perfil: { ...prev.perfil, ...cambios } };
-      guardarEstado(nuevo);
-      return nuevo;
-    });
+  async function actualizarPerfil(cambios: Partial<EstadoApp["perfil"]>) {
+    if (!userId) return;
+    setEstado((prev) => (prev ? { ...prev, perfil: { ...prev.perfil, ...cambios } } : prev));
+    const supabase = crearClienteNavegador();
+    await actualizarPerfilSupabase(supabase, userId, cambios);
   }
 
   function guardarNombre() {
@@ -196,7 +202,11 @@ export default function CuentaPage() {
 
           <button
             type="button"
-            onClick={() => router.push("/")}
+            onClick={async () => {
+              const supabase = crearClienteNavegador();
+              await supabase.auth.signOut();
+              router.push("/");
+            }}
             className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-full border border-border-strong text-[13.5px] font-medium text-txt-secondary"
           >
             <LogOut className="h-4 w-4" /> Cerrar sesión

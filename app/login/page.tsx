@@ -9,7 +9,9 @@ import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
 import { Reveal } from "@/components/app/ui/Reveal";
 import { Logo } from "@/components/app/ui/Logo";
 import { BienvenidaMarca } from "@/components/app/ui/BienvenidaMarca";
-import { cargarEstado, guardarEstado } from "@/lib/app/store";
+import { crearClienteNavegador } from "@/lib/supabase/client";
+import { actualizarPerfil } from "@/lib/supabase/queries";
+import { leerDiagnostico } from "@/lib/onboarding/storage";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -20,8 +22,9 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [cuentaCreada, setCuentaCreada] = useState(false);
+  const [revisaCorreo, setRevisaCorreo] = useState(false);
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!EMAIL_RE.test(email)) {
       setError("Ese correo no parece válido — revisa que esté bien escrito.");
       return;
@@ -32,10 +35,74 @@ export default function LoginPage() {
     }
     setError(null);
     setLoading(true);
-    // La creación de cuenta real (Supabase Auth) se conecta en la Sesión 6.
-    const estado = cargarEstado();
-    guardarEstado({ ...estado, perfil: { ...estado.perfil, email } });
-    window.setTimeout(() => setCuentaCreada(true), 500);
+
+    const supabase = crearClienteNavegador();
+
+    // Primero probamos iniciar sesión — Supabase, por seguridad, NO avisa con un error claro
+    // cuando el signUp se hace sobre un correo ya registrado (anti-enumeración), así que fiarse
+    // de "el signUp dio error" para decidir si ya existe la cuenta deja a quien vuelve sin poder
+    // entrar nunca. Si el correo es nuevo, el login simplemente falla y ahí sí creamos la cuenta.
+    const { data: dataSignIn, error: errSignIn } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (dataSignIn.session) {
+      setCuentaCreada(true);
+      setLoading(false);
+      return;
+    }
+
+    if (errSignIn && errSignIn.message.toLowerCase().includes("invalid")) {
+      // Contraseña incorrecta para un correo que sí existe vs. correo nuevo: no lo podemos saber
+      // sin exponer cuáles correos existen, así que probamos crear la cuenta directamente.
+    }
+
+    const { data, error: errSignUp } = await supabase.auth.signUp({ email, password });
+
+    if (errSignUp) {
+      setError("No pudimos crear tu cuenta — intenta de nuevo en un momento.");
+      setLoading(false);
+      return;
+    }
+
+    if (data.user && !data.user.identities?.length) {
+      // signUp "exitoso" pero sin identidades nuevas = el correo YA tenía cuenta confirmada y la
+      // contraseña que escribiste no es la suya.
+      setError("Ese correo ya tiene una cuenta — revisa tu contraseña.");
+      setLoading(false);
+      return;
+    }
+
+    if (!data.session || !data.user) {
+      // El proyecto pide confirmar el correo antes de dar sesión — no podemos fingir que ya entró.
+      setRevisaCorreo(true);
+      setLoading(false);
+      return;
+    }
+
+    // Aplica lo que respondió en el diagnóstico (/onboarding) al perfil real recién creado — si no
+    // se hace aquí, la cuenta real queda con los textos genéricos del trigger en vez de lo suyo.
+    const diagnostico = leerDiagnostico();
+    if (diagnostico) {
+      await actualizarPerfil(supabase, data.user.id, {
+        metaLabel: diagnostico.metaLabel,
+        ...(diagnostico.dolorLabel ? { dolorLabel: diagnostico.dolorLabel } : {}),
+      });
+    }
+
+    setCuentaCreada(true);
+    setLoading(false);
+  }
+
+  if (revisaCorreo) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">
+        <Mail className="h-8 w-8 text-brand-primary" />
+        <h1 className="mt-4 font-display text-[20px] font-medium text-txt-primary">Revisa tu correo</h1>
+        <p className="mt-2 max-w-[280px] text-[13.5px] text-txt-secondary">
+          Te mandamos un link a <span className="font-medium text-txt-primary">{email}</span> para
+          confirmar tu cuenta — ábrelo y vuelve aquí para entrar.
+        </p>
+      </div>
+    );
   }
 
   if (cuentaCreada) {

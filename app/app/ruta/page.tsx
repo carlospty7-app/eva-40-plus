@@ -24,7 +24,8 @@ import type { MovimientoDia } from "@/lib/app/types";
 import { AnimatedCounter } from "@/components/app/interna/AnimatedCounter";
 import { TopHeader } from "@/components/app/interna/TopHeader";
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
-import { cargarEstado } from "@/lib/app/store";
+import { crearClienteNavegador } from "@/lib/supabase/client";
+import { cargarEstadoSupabase } from "@/lib/supabase/queries";
 import { isoFecha, nombreDia } from "@/lib/app/dates";
 import type { EstadoApp } from "@/lib/app/types";
 
@@ -39,11 +40,16 @@ export default function MiRutaPage() {
   const [seleccionado, setSeleccionado] = useState(0);
 
   useEffect(() => {
-    const cargado = cargarEstado();
-    setEstado(cargado);
-    const hoy = isoFecha(new Date());
-    const idxHoy = cargado.rutaSemana.findIndex((d) => d.fecha === hoy);
-    setSeleccionado(idxHoy >= 0 ? idxHoy : 0);
+    const supabase = crearClienteNavegador();
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const cargado = await cargarEstadoSupabase(supabase, data.user.id);
+      if (!cargado) return;
+      setEstado(cargado);
+      const hoy = isoFecha(new Date());
+      const idxHoy = cargado.rutaSemana.findIndex((d) => d.fecha === hoy);
+      setSeleccionado(idxHoy >= 0 ? idxHoy : 0);
+    });
   }, []);
 
   const hoyIso = isoFecha(new Date());
