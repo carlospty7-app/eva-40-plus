@@ -16,7 +16,11 @@ import {
 } from "lucide-react";
 import { formatoCorto } from "@/lib/app/dates";
 import { crearClienteNavegador } from "@/lib/supabase/client";
-import { actualizarPerfil as actualizarPerfilSupabase, cargarEstadoSupabase } from "@/lib/supabase/queries";
+import {
+  actualizarPerfil as actualizarPerfilSupabase,
+  cargarEstadoSupabase,
+  subirFotoPerfil,
+} from "@/lib/supabase/queries";
 import type { EstadoApp } from "@/lib/app/types";
 
 const LEGALES = [
@@ -57,16 +61,12 @@ export default function CuentaPage() {
     setEditandoNombre(false);
   }
 
-  function subirFoto(e: React.ChangeEvent<HTMLInputElement>) {
+  async function subirFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const archivo = e.target.files?.[0];
-    if (!archivo) return;
-    const lector = new FileReader();
-    lector.onload = () => {
-      if (typeof lector.result === "string") {
-        actualizarPerfil({ fotoUrl: lector.result });
-      }
-    };
-    lector.readAsDataURL(archivo);
+    if (!archivo || !userId) return;
+    const supabase = crearClienteNavegador();
+    const url = await subirFotoPerfil(supabase, userId, archivo);
+    if (url) actualizarPerfil({ fotoUrl: url });
   }
 
   return (

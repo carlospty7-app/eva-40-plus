@@ -78,6 +78,26 @@ export async function actualizarPerfil(
   return !error;
 }
 
+/** Sube una foto de perfil al bucket público `avatars` (carpeta = user id, así RLS de Storage
+ * puede verificar dueño) y devuelve su URL pública — reemplaza guardar la imagen como base64
+ * directo en la fila del perfil. */
+export async function subirFotoPerfil(
+  supabase: SupabaseClient,
+  userId: string,
+  archivo: File,
+): Promise<string | null> {
+  const extension = archivo.name.split(".").pop() || "jpg";
+  const ruta = `${userId}/foto.${extension}`;
+  const { error } = await supabase.storage
+    .from("avatars")
+    .upload(ruta, archivo, { upsert: true, cacheControl: "3600" });
+  if (error) return null;
+  const { data } = supabase.storage.from("avatars").getPublicUrl(ruta);
+  // Cache-bust: sin esto, una foto nueva con el mismo nombre de archivo sigue mostrando la vieja
+  // porque el navegador (o un CDN) cachea la URL pública tal cual.
+  return `${data.publicUrl}?v=${Date.now()}`;
+}
+
 export async function obtenerCheckins(supabase: SupabaseClient, userId: string): Promise<Checkin[]> {
   const { data, error } = await supabase
     .from("checkins_diarios")
