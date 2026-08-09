@@ -1,11 +1,42 @@
 import Link from "next/link";
-import { AlertTriangle, CircleCheck, Gauge, HeartPulse, LineChart, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  Calendar,
+  CalendarCheck,
+  CircleCheck,
+  Gauge,
+  HeartPulse,
+  LineChart,
+  Sparkles,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { obtenerDatosPanelAdmin } from "@/lib/supabase/admin-queries";
 import { formatoCorto } from "@/lib/app/dates";
 import { DatoHeroe, NoMedido } from "@/components/app/admin/DatoHeroe";
 import { TablaUsuarios } from "@/components/app/admin/TablaUsuarios";
+import { GraficoCheckins } from "@/components/app/admin/GraficoCheckins";
 
 export const dynamic = "force-dynamic";
+
+function TituloSeccion({
+  icon: Icon,
+  color,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <h2 className="flex items-center gap-2.5 text-[15px] font-semibold text-txt-primary">
+      <span className={`flex h-7 w-7 items-center justify-center rounded-full ${color}`}>
+        <Icon className="h-4 w-4" />
+      </span>
+      {children}
+    </h2>
+  );
+}
 
 export default async function AdminPage() {
   const datos = await obtenerDatosPanelAdmin();
@@ -28,7 +59,7 @@ export default async function AdminPage() {
         : { tono: "bien" as const, texto: "Todo en orden este mes." };
 
   return (
-    <div className="min-h-dvh bg-surface-base px-4 pb-16 pt-6 sm:px-8">
+    <div className="min-h-dvh bg-gradient-to-b from-brand-primary-soft/40 via-surface-base to-surface-base px-4 pb-16 pt-6 sm:px-8">
       <div className="mx-auto max-w-5xl">
         <div className="flex items-center justify-between">
           <div>
@@ -37,7 +68,7 @@ export default async function AdminPage() {
           </div>
           <Link
             href="/app"
-            className="flex h-9 items-center rounded-full border border-border-default px-4 text-[13px] font-medium text-txt-secondary"
+            className="flex h-9 items-center rounded-full border border-border-default bg-surface-primary px-4 text-[13px] font-medium text-txt-secondary"
           >
             Volver a la app
           </Link>
@@ -62,18 +93,18 @@ export default async function AdminPage() {
 
         {/* 1. Ventas y suscripciones */}
         <section className="mt-7">
-          <h2 className="flex items-center gap-2 text-[14px] font-semibold text-txt-primary">
-            <LineChart className="h-4 w-4 text-brand-primary" /> Ventas y suscripciones
-          </h2>
+          <TituloSeccion icon={LineChart} color="bg-brand-primary-soft text-brand-primary">
+            Ventas y suscripciones
+          </TituloSeccion>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <DatoHeroe label="Usuarias totales" valor={datos.totalUsuarios} />
-            <DatoHeroe label="Nuevas esta semana" valor={datos.nuevasEstaSemana} />
-            <DatoHeroe label="En prueba gratuita" valor={datos.enTrial} />
-            <DatoHeroe label="Prueba vencida" valor={datos.trialVencido} />
+            <DatoHeroe label="Usuarias totales" valor={datos.totalUsuarios} color="teal" icon={Users} />
+            <DatoHeroe label="Nuevas esta semana" valor={datos.nuevasEstaSemana} color="coral" icon={UserPlus} />
+            <DatoHeroe label="En prueba gratuita" valor={datos.enTrial} color="gold" icon={Sparkles} />
+            <DatoHeroe label="Prueba vencida" valor={datos.trialVencido} color="neutral" />
           </div>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <DatoHeroe label="Plan anual" valor={datos.planAnual} />
-            <DatoHeroe label="Plan mensual" valor={datos.planMensual} />
+            <DatoHeroe label="Plan anual" valor={datos.planAnual} color="sage" />
+            <DatoHeroe label="Plan mensual" valor={datos.planMensual} color="sage" />
           </div>
           <div className="mt-3">
             <NoMedido>
@@ -85,9 +116,9 @@ export default async function AdminPage() {
 
         {/* 2. Usuarios */}
         <section className="mt-8">
-          <h2 className="flex items-center gap-2 text-[14px] font-semibold text-txt-primary">
-            <Users className="h-4 w-4 text-brand-primary" /> Usuarias
-          </h2>
+          <TituloSeccion icon={Users} color="bg-brand-secondary/15 text-brand-secondary">
+            Usuarias
+          </TituloSeccion>
           <div className="mt-3">
             <TablaUsuarios usuarios={datos.usuarios} />
           </div>
@@ -95,14 +126,15 @@ export default async function AdminPage() {
 
         {/* 3. Salud y errores */}
         <section className="mt-8">
-          <h2 className="flex items-center gap-2 text-[14px] font-semibold text-txt-primary">
-            <HeartPulse className="h-4 w-4 text-brand-primary" /> Salud
-          </h2>
+          <TituloSeccion icon={HeartPulse} color="bg-status-error-soft text-status-error">
+            Salud
+          </TituloSeccion>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <DatoHeroe
               label="Errores (24h)"
               valor={datos.erroresUltimas24h}
               tono={datos.erroresUltimas24h >= 5 ? "atencion" : "bien"}
+              color={datos.erroresUltimas24h >= 5 ? "coral" : "sage"}
             />
           </div>
 
@@ -134,22 +166,27 @@ export default async function AdminPage() {
 
         {/* 4. Uso y métricas */}
         <section className="mt-8">
-          <h2 className="flex items-center gap-2 text-[14px] font-semibold text-txt-primary">
-            <Gauge className="h-4 w-4 text-brand-primary" /> Uso
-          </h2>
+          <TituloSeccion icon={Gauge} color="bg-brand-gold/20 text-[#8a6d1f]">
+            Uso
+          </TituloSeccion>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <DatoHeroe
               label="Activación"
               valor={activacionPct === null ? "—" : `${activacionPct}%`}
               insight="Usuarias con al menos un check-in registrado"
+              color="teal"
+              icon={Sparkles}
             />
-            <DatoHeroe label="Activas hoy" valor={datos.activasHoy} />
-            <DatoHeroe label="Activas esta semana" valor={datos.activasSemana} />
-            <DatoHeroe label="Activas este mes" valor={datos.activasMes} />
+            <DatoHeroe label="Activas hoy" valor={datos.activasHoy} color="coral" />
+            <DatoHeroe label="Activas esta semana" valor={datos.activasSemana} color="coral" />
+            <DatoHeroe label="Activas este mes" valor={datos.activasMes} color="coral" />
           </div>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <DatoHeroe label="Check-ins totales" valor={datos.totalCheckins} />
-            <DatoHeroe label="Check-ins (7 días)" valor={datos.checkinsUltimos7Dias} />
+            <DatoHeroe label="Check-ins totales" valor={datos.totalCheckins} color="gold" icon={CalendarCheck} />
+            <DatoHeroe label="Check-ins (7 días)" valor={datos.checkinsUltimos7Dias} color="gold" icon={Calendar} />
+          </div>
+          <div className="mt-3">
+            <GraficoCheckins porDia={datos.checkinsPorDia} porMes={datos.checkinsPorMes} />
           </div>
           <div className="mt-3">
             <NoMedido>

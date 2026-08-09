@@ -19,6 +19,8 @@ export type ErrorReciente = {
   createdAt: string;
 };
 
+export type PuntoSerie = { etiqueta: string; total: number };
+
 export type PanelAdminData = {
   usuarios: UsuarioAdmin[];
   totalUsuarios: number;
@@ -33,10 +35,51 @@ export type PanelAdminData = {
   usuariasConAlgunCheckin: number;
   totalCheckins: number;
   checkinsUltimos7Dias: number;
+  checkinsPorDia: PuntoSerie[];
+  checkinsPorMes: PuntoSerie[];
   erroresRecientes: ErrorReciente[];
   erroresPorContexto: { context: string; total: number }[];
   erroresUltimas24h: number;
 };
+
+const DIAS_CORTOS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+const MESES_CORTOS = [
+  "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic",
+];
+
+/** Serie de los últimos 30 días — incluye los días sin check-ins en 0, para que la gráfica no
+ * "salte" fechas y se vea el hueco real. */
+function agruparPorDia(checkins: { fecha: string }[]): PuntoSerie[] {
+  const conteo = new Map<string, number>();
+  for (const c of checkins) conteo.set(c.fecha, (conteo.get(c.fecha) ?? 0) + 1);
+
+  const puntos: PuntoSerie[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const fecha = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+    const iso = fecha.toISOString().slice(0, 10);
+    const dia = fecha.getDate();
+    puntos.push({ etiqueta: `${DIAS_CORTOS[fecha.getDay()]} ${dia}`, total: conteo.get(iso) ?? 0 });
+  }
+  return puntos;
+}
+
+/** Serie de los últimos 12 meses — mismo criterio, meses sin actividad se muestran en 0. */
+function agruparPorMes(checkins: { fecha: string }[]): PuntoSerie[] {
+  const conteo = new Map<string, number>();
+  for (const c of checkins) {
+    const clave = c.fecha.slice(0, 7); // yyyy-mm
+    conteo.set(clave, (conteo.get(clave) ?? 0) + 1);
+  }
+
+  const puntos: PuntoSerie[] = [];
+  const ahora = new Date();
+  for (let i = 11; i >= 0; i--) {
+    const fecha = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
+    const clave = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}`;
+    puntos.push({ etiqueta: MESES_CORTOS[fecha.getMonth()], total: conteo.get(clave) ?? 0 });
+  }
+  return puntos;
+}
 
 function haceNDias(n: number): string {
   return new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
@@ -109,6 +152,8 @@ export async function obtenerDatosPanelAdmin(): Promise<PanelAdminData> {
     usuariasConAlgunCheckin: new Set(filasCheckins.map((c) => c.user_id)).size,
     totalCheckins: filasCheckins.length,
     checkinsUltimos7Dias: filasCheckins.filter((c) => c.fecha >= hace7).length,
+    checkinsPorDia: agruparPorDia(filasCheckins),
+    checkinsPorMes: agruparPorMes(filasCheckins),
     erroresRecientes: filasErrores.slice(0, 10).map((e) => ({
       id: e.id,
       message: e.message,
