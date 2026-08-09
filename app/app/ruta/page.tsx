@@ -148,7 +148,7 @@ export default function MiRutaPage() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
-          className="relative mt-5 rounded-xl border border-border-default/60 bg-surface-primary p-4 shadow-sm"
+          className="relative mt-5 overflow-hidden rounded-2xl border border-border-default/40 bg-gradient-to-br from-surface-primary via-surface-primary to-brand-primary-soft/70 p-4 shadow-md"
         >
           <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
             {nombreDia(dia.dia)} {esHoy ? "· Hoy" : esFuturo ? "· Por revelar" : ""}
@@ -187,9 +187,9 @@ export default function MiRutaPage() {
                 </div>
               </div>
 
-              <div className="mt-4">
-                <p className="flex items-center gap-2 text-[12.5px] font-semibold text-txt-primary">
-                  <Utensils className="h-4 w-4 text-brand-primary" /> Alimentos recomendados
+              <div className="mt-4 rounded-xl bg-brand-primary-soft/70 p-3">
+                <p className="flex items-center gap-2 text-[12.5px] font-semibold text-brand-primary">
+                  <Utensils className="h-4 w-4" /> Alimentos recomendados
                 </p>
                 <ul className="mt-2 space-y-1.5">
                   {dia.alimentosRecomendados.map((a) => (
@@ -201,9 +201,9 @@ export default function MiRutaPage() {
                 </ul>
               </div>
 
-              <div className="mt-4">
-                <p className="flex items-center gap-2 text-[12.5px] font-semibold text-txt-primary">
-                  <Ban className="h-4 w-4 text-status-error" /> Alimentos a limitar
+              <div className="mt-3 rounded-xl bg-status-error-soft/70 p-3">
+                <p className="flex items-center gap-2 text-[12.5px] font-semibold text-status-error">
+                  <Ban className="h-4 w-4" /> Alimentos a limitar
                 </p>
                 <ul className="mt-2 space-y-1.5">
                   {dia.alimentosLimitar.map((a) => (
@@ -244,31 +244,39 @@ export default function MiRutaPage() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mt-4 rounded-xl border border-border-default/60 bg-surface-primary p-4 shadow-sm"
+            className="mt-4 rounded-2xl border border-border-default/40 bg-surface-primary p-4 shadow-md"
           >
             <p className="flex items-center gap-2 text-[12.5px] font-semibold text-txt-primary">
               <UtensilsCrossed className="h-4 w-4 text-brand-primary" /> Menú del día
             </p>
-            <ul className="mt-2 space-y-2">
-              <li className="flex items-start gap-2.5 text-[13px] text-txt-secondary">
-                <Coffee className="mt-0.5 h-3.5 w-3.5 shrink-0 text-txt-tertiary" />
+            <ul className="mt-3 space-y-2.5">
+              <li className="flex items-center gap-3 rounded-xl bg-brand-gold/12 p-2.5 text-[13px] text-txt-secondary">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-gold/25 text-txt-primary">
+                  <Coffee className="h-4 w-4" />
+                </span>
                 <span><span className="font-medium text-txt-primary">Desayuno:</span> {dia.menu.desayuno}</span>
               </li>
-              <li className="flex items-start gap-2.5 text-[13px] text-txt-secondary">
-                <Soup className="mt-0.5 h-3.5 w-3.5 shrink-0 text-txt-tertiary" />
+              <li className="flex items-center gap-3 rounded-xl bg-brand-primary-soft/60 p-2.5 text-[13px] text-txt-secondary">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-primary-soft text-brand-primary">
+                  <Soup className="h-4 w-4" />
+                </span>
                 <span><span className="font-medium text-txt-primary">Almuerzo:</span> {dia.menu.almuerzo}</span>
               </li>
-              <li className="flex items-start gap-2.5 text-[13px] text-txt-secondary">
-                <Utensils className="mt-0.5 h-3.5 w-3.5 shrink-0 text-txt-tertiary" />
+              <li className="flex items-center gap-3 rounded-xl bg-brand-secondary/12 p-2.5 text-[13px] text-txt-secondary">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-secondary/20 text-brand-secondary">
+                  <Utensils className="h-4 w-4" />
+                </span>
                 <span><span className="font-medium text-txt-primary">Cena:</span> {dia.menu.cena}</span>
               </li>
             </ul>
 
-            <div className="mt-4 flex items-start gap-2.5 rounded-lg bg-surface-tertiary/50 p-3">
-              {(() => {
-                const IconoMovimiento = ICONO_MOVIMIENTO[dia.movimiento.tipo];
-                return <IconoMovimiento className="h-4 w-4 shrink-0 text-brand-primary" />;
-              })()}
+            <div className="mt-4 flex items-start gap-3 rounded-xl bg-brand-secondary/12 p-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-secondary/20 text-brand-secondary">
+                {(() => {
+                  const IconoMovimiento = ICONO_MOVIMIENTO[dia.movimiento.tipo];
+                  return <IconoMovimiento className="h-4 w-4" />;
+                })()}
+              </span>
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">
                   Movimiento del día · {dia.movimiento.duracionMin} min · por Maru
@@ -295,7 +303,7 @@ export default function MiRutaPage() {
 
         <Link
           href="/app/ruta/compras"
-          className="mt-4 flex items-center justify-between rounded-xl border border-border-default/60 bg-surface-primary p-4 shadow-sm"
+          className="mt-4 flex items-center justify-between rounded-2xl border border-border-default/40 bg-surface-primary p-4 shadow-md"
         >
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-primary-soft text-brand-primary">
@@ -310,7 +318,7 @@ export default function MiRutaPage() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mt-4 flex items-center gap-4 rounded-xl border border-border-default/60 bg-surface-primary p-4 shadow-sm"
+          className="mt-4 flex items-center gap-4 rounded-2xl border border-border-default/40 bg-gradient-to-br from-surface-primary to-brand-accent-soft/50 p-4 shadow-md"
         >
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-accent-soft text-brand-accent">
             <Flame className="h-5 w-5" />
