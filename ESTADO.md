@@ -1,5 +1,26 @@
 # ESTADO — EVA 40+
-Última actualización: 2026-08-09 (madrugada) | Sesión actual: 7 — Backoffice construido y verificado
+Última actualización: 2026-08-09 (madrugada, tarde) | Sesión actual: 7 — Backoffice ampliado
+
+⏸️ CHECKPOINT — 2026-08-09 (tarde): `/admin` pasó de una página larga a pestañas (Resumen · Ventas
+· Usuarios · Salud · Uso · Negocio · Costo de IA), a pedido del usuario que mandó una referencia
+visual de otro panel. Dos pestañas nuevas, ambas con datos reales, no maquetas:
+- **Negocio**: LTV/CAC/ratio/payback muestran "No medido" (correcto — no hay Hotmart conectado
+  todavía). Nueva tabla `acquisition_spend` + formulario en el panel para que el usuario cargue a
+  mano el gasto en ads/afiliados por canal (`app/api/admin/gasto/route.ts`, gateado por
+  `ADMIN_EMAILS`, igual que `/admin`).
+- **Costo de IA**: nueva tabla `ai_calls` — cada llamada real a `/api/eva` ahora se loguea con
+  modelo/tokens/costo estimado (`lib/ai/pricing.ts`, precios públicos de Anthropic, marcado
+  explícitamente como estimado). El panel muestra gasto del mes, costo por usuario activo, costo
+  por modelo y una gráfica de 14 días — probado en vivo con una llamada real (US$0,0008, 1 llamada
+  de `claude-haiku-4-5`) y luego borrado para no ensuciar datos reales.
+- 🔍 Verificado: `tsc` ✓ `build` ✓ · probado en vivo con Playwright (tabs cambian, formulario de
+  gasto guarda y refresca, chat real de EVA generó una fila real en `ai_calls`) · un bug real
+  encontrado y corregido en el camino: los ejes de las gráficas usaban `var(--txt-tertiary)` (no
+  existe como propiedad CSS cruda, solo como alias de Tailwind) y caían en negro por defecto —
+  corregido a `var(--text-tertiary)`, que sí es la variable real definida en `globals.css`.
+- Pendiente, no bloqueante: el costo de IA es un ESTIMADO (no cuenta con precisión los tokens de
+  caché — el prompt cacheado de Maru no se refleja 1:1 en `usage.input_tokens`), suficiente para
+  detectar una IA que se come el margen, no para facturación exacta.
 
 ⏸️ CHECKPOINT — 2026-08-09 (madrugada): Panel de administración `/admin` construido de punta a
 punta a pedido explícito del usuario ("implementa todo eso de una vez... todas las áreas
