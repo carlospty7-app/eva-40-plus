@@ -23,6 +23,28 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [cuentaCreada, setCuentaCreada] = useState(false);
   const [revisaCorreo, setRevisaCorreo] = useState(false);
+  const [esRegistro, setEsRegistro] = useState(true);
+  const [modoRecuperar, setModoRecuperar] = useState(false);
+  const [recuperarEnviado, setRecuperarEnviado] = useState(false);
+  const [recuperarError, setRecuperarError] = useState<string | null>(null);
+  const [recuperarLoading, setRecuperarLoading] = useState(false);
+
+  async function enviarRecuperacion() {
+    if (!EMAIL_RE.test(email)) {
+      setRecuperarError("Ese correo no parece válido — revisa que esté bien escrito.");
+      return;
+    }
+    setRecuperarError(null);
+    setRecuperarLoading(true);
+    const supabase = crearClienteNavegador();
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login/actualizar-contrasena`,
+    });
+    // Siempre mostramos éxito, exista o no ese correo — decir "ese correo no existe" permitiría
+    // a cualquiera averiguar qué correos están registrados (anti-enumeración).
+    setRecuperarLoading(false);
+    setRecuperarEnviado(true);
+  }
 
   async function handleSubmit() {
     if (!EMAIL_RE.test(email)) {
@@ -109,6 +131,81 @@ export default function LoginPage() {
     return <BienvenidaMarca onContinuar={() => router.push("/app")} />;
   }
 
+  if (modoRecuperar) {
+    if (recuperarEnviado) {
+      return (
+        <div className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">
+          <Mail className="h-8 w-8 text-brand-primary" />
+          <h1 className="mt-4 font-display text-[20px] font-medium text-txt-primary">Revisa tu correo</h1>
+          <p className="mt-2 max-w-[280px] text-[13.5px] text-txt-secondary">
+            Si <span className="font-medium text-txt-primary">{email}</span> tiene una cuenta, te
+            mandamos un link para crear una contraseña nueva.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setModoRecuperar(false);
+              setRecuperarEnviado(false);
+            }}
+            className="mt-5 text-[13px] font-medium text-brand-primary underline"
+          >
+            Volver a iniciar sesión
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative flex min-h-dvh flex-col overflow-hidden bg-surface-base px-4 pb-10 pt-4">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[640px] overflow-hidden">
+          <BotanicalGlow variant="light" />
+        </div>
+        <button
+          type="button"
+          onClick={() => setModoRecuperar(false)}
+          aria-label="Atrás"
+          className="flex h-11 w-11 items-center justify-center rounded-full text-txt-secondary"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+
+        <div className="relative mx-auto flex w-full max-w-[340px] flex-1 flex-col justify-center pb-10">
+          <h1 className="font-display text-[24px] font-medium text-txt-primary">Recupera tu acceso</h1>
+          <p className="mt-1.5 text-[13.5px] text-txt-secondary">
+            Escribe tu correo y te mandamos un link para crear una contraseña nueva.
+          </p>
+
+          <div className="mt-6 flex h-[52px] items-center gap-2.5 rounded-full border border-border-default bg-surface-primary px-5">
+            <Mail className="h-4.5 w-4.5 shrink-0 text-txt-tertiary" />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setRecuperarError(null);
+              }}
+              placeholder="tucorreo@ejemplo.com"
+              className="w-full bg-transparent text-[14.5px] text-txt-primary outline-none placeholder:text-txt-tertiary"
+            />
+          </div>
+
+          {recuperarError && (
+            <p className="mt-3 flex items-start gap-2 text-[13px] text-status-error">
+              <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+              {recuperarError}
+            </p>
+          )}
+
+          <div className="mt-6">
+            <TapButton disabled={!email || recuperarLoading} onClick={enviarRecuperacion}>
+              {recuperarLoading ? "Enviando…" : "Enviar link de recuperación"}
+            </TapButton>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative flex min-h-dvh flex-col overflow-hidden bg-surface-base px-4 pb-10 pt-4">
       <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[640px] overflow-hidden">
@@ -131,11 +228,40 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <h1 className="mt-8 font-display text-[24px] font-medium text-txt-primary">
-            Crea tu cuenta
+          <div className="mt-7 flex rounded-full bg-surface-tertiary/60 p-1">
+            <button
+              type="button"
+              onClick={() => {
+                setEsRegistro(false);
+                setError(null);
+              }}
+              className={`h-10 flex-1 rounded-full text-[13.5px] font-semibold transition-colors ${
+                !esRegistro ? "bg-surface-primary text-brand-primary shadow-sm" : "text-txt-secondary"
+              }`}
+            >
+              Iniciar sesión
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEsRegistro(true);
+                setError(null);
+              }}
+              className={`h-10 flex-1 rounded-full text-[13.5px] font-semibold transition-colors ${
+                esRegistro ? "bg-surface-primary text-brand-primary shadow-sm" : "text-txt-secondary"
+              }`}
+            >
+              Crear cuenta
+            </button>
+          </div>
+
+          <h1 className="mt-5 font-display text-[24px] font-medium text-txt-primary">
+            {esRegistro ? "Crea tu cuenta" : "Bienvenida de vuelta"}
           </h1>
           <p className="mt-1.5 text-[13.5px] text-txt-secondary">
-            Para guardar tu diagnóstico y tu ruta — toma 30 segundos.
+            {esRegistro
+              ? "Para guardar tu diagnóstico y tu ruta — toma 30 segundos."
+              : "Escribe tu correo y contraseña para entrar."}
           </p>
         </Reveal>
 
@@ -199,11 +325,21 @@ export default function LoginPage() {
                   setPassword(e.target.value);
                   setError(null);
                 }}
-                placeholder="Crea una contraseña"
+                placeholder={esRegistro ? "Crea una contraseña" : "Tu contraseña"}
                 className="w-full bg-transparent text-[14.5px] text-txt-primary outline-none placeholder:text-txt-tertiary"
               />
             </div>
           </div>
+
+          {!esRegistro && (
+            <button
+              type="button"
+              onClick={() => setModoRecuperar(true)}
+              className="mt-2.5 text-[12.5px] font-medium text-brand-primary"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          )}
         </Reveal>
 
         {error && (
@@ -216,7 +352,7 @@ export default function LoginPage() {
         <Reveal delay={0.2}>
           <div className="mt-6">
             <TapButton disabled={!email || !password || loading} onClick={handleSubmit}>
-              {loading ? "Creando tu cuenta…" : "Crear mi cuenta"}
+              {loading ? "Un momento…" : esRegistro ? "Crear mi cuenta" : "Entrar"}
             </TapButton>
           </div>
 
