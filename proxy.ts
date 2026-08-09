@@ -43,6 +43,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (user && request.nextUrl.pathname.startsWith("/app")) {
+    const { data: perfil } = await supabase.from("profiles").select("activo").eq("id", user.id).single();
+    if (perfil && perfil.activo === false) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/cuenta-desactivada";
+      return NextResponse.redirect(url);
+    }
+  }
+
   return response;
 }
 

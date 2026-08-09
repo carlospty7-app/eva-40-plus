@@ -10,6 +10,7 @@ export type UsuarioAdmin = {
   rachaDias: number;
   createdAt: string;
   ultimoCheckin: string | null;
+  activo: boolean;
 };
 
 export type ErrorReciente = {
@@ -137,7 +138,7 @@ export async function obtenerDatosPanelAdmin(): Promise<PanelAdminData> {
     await Promise.all([
       supabase
         .from("profiles")
-        .select("id, nombre, email, plan, trial_activo, fecha_cobro, racha_dias, created_at")
+        .select("id, nombre, email, plan, trial_activo, fecha_cobro, racha_dias, created_at, activo")
         .order("created_at", { ascending: false }),
       supabase.from("checkins_diarios").select("user_id, fecha").order("fecha", { ascending: false }),
       supabase
@@ -170,6 +171,7 @@ export async function obtenerDatosPanelAdmin(): Promise<PanelAdminData> {
     rachaDias: p.racha_dias,
     createdAt: p.created_at,
     ultimoCheckin: ultimoCheckinPorUsuario.get(p.id) ?? null,
+    activo: p.activo,
   }));
 
   const hoy = new Date().toISOString().slice(0, 10);

@@ -146,7 +146,8 @@ export default async function AdminPage() {
 
   const tabNegocio = (
     <div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <DatoHeroe label="MRR" valor="No medido" color="neutral" />
         <DatoHeroe label="LTV estimado" valor="No medido" color="neutral" />
         <DatoHeroe label="CAC" valor="No medido" color="neutral" />
         <DatoHeroe label="Ratio LTV : CAC" valor="No medido" color="neutral" />
@@ -154,8 +155,9 @@ export default async function AdminPage() {
       </div>
       <div className="mt-3">
         <NoMedido>
-          📊 El LTV y el CAC se calculan solos cuando conectes el cobro real por Hotmart — hoy no
-          hay ingresos que dividir entre el gasto de abajo.
+          📊 El MRR, LTV y CAC se calculan solos cuando conectes el cobro real por Hotmart — hoy
+          nadie ha pagado todavía, así que no hay ingresos que medir ni dividir entre el gasto de
+          abajo.
         </NoMedido>
       </div>
 
