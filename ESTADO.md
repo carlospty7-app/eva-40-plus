@@ -45,10 +45,10 @@ vars a Vercel y le dio Redeploy:** registro → sesión real → revisión diari
   `completado` ahora es real (se deriva de si existe un checkin ese día). No hacía falta duplicar
   contenido generado en una tabla para esta vuelta — si más adelante Mi Ruta necesita contenido
   personalizado por usuaria (no solo por día de la semana), ahí sí se usa esta tabla.
-- La foto de perfil se guarda como texto base64 directo en la columna `foto_url` (mismo criterio que
-  tenía en localStorage) — funciona, pero no es lo ideal a escala (fotos grandes = filas pesadas).
-  Lo correcto a futuro es Supabase Storage (un bucket) en vez de la columna de texto — no bloqueante
-  hoy, day sí vale la pena si crece la base de usuarias.
+- ✅ RESUELTO (2026-08-09): las fotos de perfil ya van a un bucket real de Supabase Storage
+  (`avatars`, público de solo-lectura, escritura solo por la dueña — carpeta = user id) en vez de
+  guardarse como texto base64 en la fila del perfil. Verificado en vivo subiendo una foto real con
+  una cuenta de prueba y confirmando la URL en la base de datos.
 - El envío de emails de confirmación usa el mailer por defecto de Supabase, que tiene un límite muy
   bajo (se topó en las pruebas) — cuando haya usuarias reales de verdad, hay que configurar SMTP
   propio (Resend, ya está en el plan del SO) para no toparse con ese límite en un lanzamiento real.
