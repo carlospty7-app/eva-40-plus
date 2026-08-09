@@ -169,6 +169,16 @@ export async function registrarCheckinHoy(
     .update({ racha_dias: rachaDias })
     .eq("id", userId);
 
+  // Alimenta `event_log` con la acción principal de la app — el backoffice la usa para medir
+  // activación y uso (Sección "Uso" de /admin) sin depender de una herramienta externa.
+  if (!errorCheckin) {
+    await supabase.from("event_log").insert({
+      tipo: existente ? "checkin_editado" : "checkin_creado",
+      user_id: userId,
+      metadata: { racha_dias: rachaDias },
+    });
+  }
+
   return { ok: !errorCheckin && !errorPerfil, rachaDias };
 }
 

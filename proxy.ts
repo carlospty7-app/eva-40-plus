@@ -1,8 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { esCorreoAdmin } from "@/lib/supabase/admin";
 
-/** Refresca la sesión de Supabase en cada request y protege `/app/*` — sin sesión real, redirige
- * a `/login` en vez de dejar pasar a datos que no existen o de otra persona. */
+/** Refresca la sesión de Supabase en cada request y protege `/app/*` y `/admin/*` — sin sesión
+ * real, redirige a `/login`; en `/admin`, además exige que el correo esté en ADMIN_EMAILS (el
+ * guard vive aquí, en el servidor — nunca basta con solo ocultar el link en la UI). */
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -27,9 +29,17 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && request.nextUrl.pathname.startsWith("/app")) {
+  const esRutaAdmin = request.nextUrl.pathname.startsWith("/admin");
+
+  if (!user && (request.nextUrl.pathname.startsWith("/app") || esRutaAdmin)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  if (esRutaAdmin && !esCorreoAdmin(user?.email)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/app";
     return NextResponse.redirect(url);
   }
 
@@ -37,5 +47,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/app/:path*"],
+  matcher: ["/app/:path*", "/admin/:path*"],
 };

@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { construirSystemPromptDinamico, construirSystemPromptEstable } from "@/lib/ai/systemPrompt";
+import { crearClienteAdmin } from "@/lib/supabase/admin";
 import type { Checkin } from "@/lib/app/types";
 
 export const runtime = "nodejs";
@@ -95,6 +96,11 @@ export async function POST(req: Request) {
           ),
         );
         console.error("Error en stream de EVA:", err);
+        const mensaje = err instanceof Error ? err.message : "Error desconocido en el stream de EVA";
+        crearClienteAdmin()
+          .from("error_log")
+          .insert({ message: mensaje.slice(0, 500), context: "api_eva" })
+          .then(() => {});
       } finally {
         controller.close();
       }

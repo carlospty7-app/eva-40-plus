@@ -1,5 +1,62 @@
 # ESTADO — EVA 40+
-Última actualización: 2026-08-09 | Sesión actual: 6 CERRADA — Supabase real conectado, verificado en producción
+Última actualización: 2026-08-09 (madrugada) | Sesión actual: 7 — Backoffice construido y verificado
+
+⏸️ CHECKPOINT — 2026-08-09 (madrugada): Panel de administración `/admin` construido de punta a
+punta a pedido explícito del usuario ("implementa todo eso de una vez... todas las áreas
+fundamentales"), tras confirmar con él que hoy no hay pagos reales (Hotmart pendiente) y que solo
+él (carlospty7@gmail.com) tiene acceso.
+
+**Acceso — gate server-side, no solo ocultar el link (evita IDOR):**
+- `ADMIN_EMAILS=carlospty7@gmail.com` en `.env.local` (server-only, sin `NEXT_PUBLIC_`) —
+  **falta agregarlo también en Vercel → Settings → Environment Variables + Redeploy** para que
+  funcione en producción, igual que se hizo con las claves de Supabase.
+- `lib/supabase/admin.ts`: `crearClienteAdmin()` (cliente con la service role key, salta RLS —
+  solo se usa en código de servidor ya gateado) + `esCorreoAdmin()`.
+- `proxy.ts` extendido: sin sesión → `/login`; con sesión pero correo no admin → redirige a `/app`.
+  Verificado en vivo con 2 cuentas reales (Playwright): la cuenta admin entra y ve datos reales;
+  una cuenta normal de prueba fue rechazada y mandada a `/app` (cuenta de prueba ya borrada).
+- **Tu cuenta real de admin ya existe**: `carlospty7@gmail.com` / `EvaAdmin2026!` — puedes entrar
+  a `/login` con eso. No hay pantalla de "olvidé mi contraseña" todavía; si quieres cambiarla, pide
+  que se agregue esa función.
+
+**Datos — reales donde hay fuente, "no medido" donde no la hay (nunca inventados):**
+- `lib/supabase/admin-queries.ts`: agrega `profiles` + `checkins_diarios` + `error_log` en una sola
+  función `obtenerDatosPanelAdmin()`.
+- Tablas nuevas: `error_log` (RLS: cliente solo inserta, admin lee vía service role) y `event_log`
+  (RLS: inserta solo su propio evento) — migración `crear_tablas_backoffice`. Advisor de seguridad
+  revisado tras crearlas: limpio (el único warning es `leaked_password_protection`, preexistente,
+  no relacionado a este cambio).
+- `registrarCheckinHoy` (`lib/supabase/queries.ts`) ahora también inserta en `event_log`
+  (`checkin_creado`/`checkin_editado`) — es la acción principal de la app, alimenta "Uso".
+- Secciones que SÍ muestran número real hoy: Usuarias totales/nuevas/en trial, distribución de
+  plan, tabla de usuarias con búsqueda, activación (% con algún check-in), activas hoy/semana/mes,
+  check-ins totales/7 días, errores (24h) y lista de errores recientes.
+- Secciones marcadas explícitamente "no medido" (con la razón, no un hueco silencioso): ingresos/
+  ganancia real/cancelaciones (falta conectar Hotmart), estado de webhooks de pago (no hay
+  integración todavía), retención D1/D7/D30 exacta y punto de abandono por pantalla (falta más
+  historial real de `event_log` para que el número tenga sentido).
+
+**Salud — Error Boundaries reales (antes la app podía mostrar pantalla blanca):**
+- `app/error.tsx` (raíz) y `app/app/error.tsx` (específico de la app interna, con botón "Volver a
+  Hoy") — ambos reportan a `POST /api/log-error` (nueva ruta, rate-limited 30/5min por IP, usa el
+  cliente de servicio para insertar en `error_log`).
+- El `catch` de `/api/eva` ahora también loguea a `error_log` (contexto `api_eva`) además de la
+  respuesta amable que ya tenía.
+
+🔍 Verificado: `tsc --noEmit` ✓ · `npm run build` ✓ (`/admin` sale como ruta dinámica) · `dev` ✓ ·
+probado en vivo con Playwright (cuenta admin real entra y ve sus propios datos; cuenta no-admin
+rechazada) · screenshot del panel a 1280px revisado visualmente (no se corrió `revisor-visual` — su
+rúbrica /40 es para pantallas de venta/uso de la clienta a 375px, no aplica a una herramienta interna
+de escritorio del dueño).
+
+**Pendiente, no bloqueante:**
+- Agregar `ADMIN_EMAILS` en Vercel (ver arriba) — sin esto, `/admin` en producción rechaza incluso
+  al dueño porque la env var no existe ahí.
+- `ESTADO.md` pasó las 200 líneas recomendadas hace varias sesiones — sigue siendo útil como
+  historial pero conviene comprimir los checkpoints viejos en algún momento (no urgente).
+- Backoffice nivel "Optimización" completo (LTV/CAC, `acquisition_spend`, avisos automáticos de
+  margen/canal) queda para cuando haya ventas reales — no tiene sentido construirlo antes de tener
+  datos de Hotmart que lo alimenten.
 
 ⏸️ CHECKPOINT — 2026-08-09 (noche): EVA 40+ ya tiene backend real. Ya no vive en `localStorage`.
 
