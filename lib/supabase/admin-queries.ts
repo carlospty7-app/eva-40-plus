@@ -40,6 +40,26 @@ export type PanelAdminData = {
   erroresRecientes: ErrorReciente[];
   erroresPorContexto: { context: string; total: number }[];
   erroresUltimas24h: number;
+
+  // Negocio (LTV/CAC) — quedan en null hasta que haya ingresos reales de Hotmart; el gasto por
+  // canal sí es real desde que el dueño lo carga a mano (no viene de ningún webhook).
+  gastoAdquisicionTotal: number;
+  gastoPorCanal: GastoCanal[];
+
+  // Costo de IA — real desde la primera llamada a /api/eva (se loguea en `ai_calls`).
+  costoIaEsteMes: number;
+  llamadasIaEsteMes: number;
+  costoIaPorUsuarioActivo: number | null;
+  costoIaPorModelo: { model: string; llamadas: number; costoUsd: number }[];
+  costoIaUltimos14Dias: PuntoSerie[];
+};
+
+export type GastoCanal = {
+  id: string;
+  channel: string;
+  amountUsd: number;
+  periodStart: string;
+  periodEnd: string;
 };
 
 const DIAS_CORTOS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
@@ -81,6 +101,27 @@ function agruparPorMes(checkins: { fecha: string }[]): PuntoSerie[] {
   return puntos;
 }
 
+/** Serie de costo de IA de los últimos N días (por fecha de creación de la llamada, no de fecha de
+ * check-in) — mismo criterio de "incluir los días en 0" que las otras series. */
+function agruparCostoPorDia(llamadas: { created_at: string; costo_usd: number }[], dias: number): PuntoSerie[] {
+  const conteo = new Map<string, number>();
+  for (const l of llamadas) {
+    const iso = l.created_at.slice(0, 10);
+    conteo.set(iso, (conteo.get(iso) ?? 0) + l.costo_usd);
+  }
+
+  const puntos: PuntoSerie[] = [];
+  for (let i = dias - 1; i >= 0; i--) {
+    const fecha = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+    const iso = fecha.toISOString().slice(0, 10);
+    puntos.push({
+      etiqueta: `${DIAS_CORTOS[fecha.getDay()]} ${fecha.getDate()}`,
+      total: Math.round((conteo.get(iso) ?? 0) * 10000) / 10000,
+    });
+  }
+  return puntos;
+}
+
 function haceNDias(n: number): string {
   return new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
 }
@@ -92,22 +133,27 @@ function haceNDias(n: number): string {
 export async function obtenerDatosPanelAdmin(): Promise<PanelAdminData> {
   const supabase = crearClienteAdmin();
 
-  const [{ data: perfiles }, { data: checkins }, { data: errores }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id, nombre, email, plan, trial_activo, fecha_cobro, racha_dias, created_at")
-      .order("created_at", { ascending: false }),
-    supabase.from("checkins_diarios").select("user_id, fecha").order("fecha", { ascending: false }),
-    supabase
-      .from("error_log")
-      .select("id, message, context, created_at")
-      .order("created_at", { ascending: false })
-      .limit(50),
-  ]);
+  const [{ data: perfiles }, { data: checkins }, { data: errores }, { data: gastos }, { data: llamadasIa }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, nombre, email, plan, trial_activo, fecha_cobro, racha_dias, created_at")
+        .order("created_at", { ascending: false }),
+      supabase.from("checkins_diarios").select("user_id, fecha").order("fecha", { ascending: false }),
+      supabase
+        .from("error_log")
+        .select("id, message, context, created_at")
+        .order("created_at", { ascending: false })
+        .limit(50),
+      supabase.from("acquisition_spend").select("id, channel, amount_usd, period_start, period_end").order("period_start", { ascending: false }),
+      supabase.from("ai_calls").select("model, input_tokens, output_tokens, costo_usd, created_at").order("created_at", { ascending: false }),
+    ]);
 
   const filasPerfiles = perfiles ?? [];
   const filasCheckins = checkins ?? [];
   const filasErrores = errores ?? [];
+  const filasGastos = gastos ?? [];
+  const filasIa = llamadasIa ?? [];
 
   const ultimoCheckinPorUsuario = new Map<string, string>();
   for (const c of filasCheckins) {
@@ -138,6 +184,17 @@ export async function obtenerDatosPanelAdmin(): Promise<PanelAdminData> {
     erroresPorContextoMap.set(e.context, (erroresPorContextoMap.get(e.context) ?? 0) + 1);
   }
 
+  const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+  const llamadasEsteMes = filasIa.filter((l) => l.created_at >= inicioMes);
+  const costoIaEsteMes = llamadasEsteMes.reduce((suma, l) => suma + l.costo_usd, 0);
+  const activasMes = usuariosActivos(hace30);
+
+  const costoPorModeloMap = new Map<string, { llamadas: number; costoUsd: number }>();
+  for (const l of llamadasEsteMes) {
+    const actual = costoPorModeloMap.get(l.model) ?? { llamadas: 0, costoUsd: 0 };
+    costoPorModeloMap.set(l.model, { llamadas: actual.llamadas + 1, costoUsd: actual.costoUsd + l.costo_usd });
+  }
+
   return {
     usuarios,
     totalUsuarios: filasPerfiles.length,
@@ -148,7 +205,7 @@ export async function obtenerDatosPanelAdmin(): Promise<PanelAdminData> {
     planMensual: filasPerfiles.filter((p) => p.plan === "mensual").length,
     activasHoy: usuariosActivos(hoy),
     activasSemana: usuariosActivos(hace7),
-    activasMes: usuariosActivos(hace30),
+    activasMes,
     usuariasConAlgunCheckin: new Set(filasCheckins.map((c) => c.user_id)).size,
     totalCheckins: filasCheckins.length,
     checkinsUltimos7Dias: filasCheckins.filter((c) => c.fecha >= hace7).length,
@@ -164,5 +221,22 @@ export async function obtenerDatosPanelAdmin(): Promise<PanelAdminData> {
       .map(([context, total]) => ({ context, total }))
       .sort((a, b) => b.total - a.total),
     erroresUltimas24h: filasErrores.filter((e) => e.created_at >= haceNDias(1)).length,
+
+    gastoAdquisicionTotal: filasGastos.reduce((suma, g) => suma + g.amount_usd, 0),
+    gastoPorCanal: filasGastos.map((g) => ({
+      id: g.id,
+      channel: g.channel,
+      amountUsd: g.amount_usd,
+      periodStart: g.period_start,
+      periodEnd: g.period_end,
+    })),
+
+    costoIaEsteMes,
+    llamadasIaEsteMes: llamadasEsteMes.length,
+    costoIaPorUsuarioActivo: activasMes > 0 ? costoIaEsteMes / activasMes : null,
+    costoIaPorModelo: Array.from(costoPorModeloMap.entries())
+      .map(([model, v]) => ({ model, llamadas: v.llamadas, costoUsd: v.costoUsd }))
+      .sort((a, b) => b.costoUsd - a.costoUsd),
+    costoIaUltimos14Dias: agruparCostoPorDia(filasIa, 14),
   };
 }

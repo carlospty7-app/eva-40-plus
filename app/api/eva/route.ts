@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { construirSystemPromptDinamico, construirSystemPromptEstable } from "@/lib/ai/systemPrompt";
 import { crearClienteAdmin } from "@/lib/supabase/admin";
+import { crearClienteServidor } from "@/lib/supabase/server";
+import { estimarCostoUsd } from "@/lib/ai/pricing";
 import type { Checkin } from "@/lib/app/types";
 
 export const runtime = "nodejs";
@@ -62,9 +64,15 @@ export async function POST(req: Request) {
   }
 
   const ultimos = mensajes.slice(-12);
+  const modelo = process.env.AI_MODEL || "claude-haiku-4-5";
+
+  const supabaseUsuario = await crearClienteServidor();
+  const {
+    data: { user },
+  } = await supabaseUsuario.auth.getUser();
 
   const stream = client.messages.stream({
-    model: process.env.AI_MODEL || "claude-haiku-4-5",
+    model: modelo,
     max_tokens: 1024,
     system: [
       {
@@ -88,6 +96,24 @@ export async function POST(req: Request) {
           if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
             controller.enqueue(encoder.encode(event.delta.text));
           }
+        }
+
+        // Registra el costo real de esta llamada — alimenta la sección "Costo de IA" del panel.
+        // Nunca debe tumbar la respuesta al usuario si falla, así que va en su propio try.
+        try {
+          const mensajeFinal = await stream.finalMessage();
+          const { input_tokens, output_tokens } = mensajeFinal.usage;
+          await crearClienteAdmin()
+            .from("ai_calls")
+            .insert({
+              model: modelo,
+              input_tokens,
+              output_tokens,
+              costo_usd: estimarCostoUsd(modelo, input_tokens, output_tokens),
+              user_id: user?.id ?? null,
+            });
+        } catch (errCosto) {
+          console.error("No se pudo registrar el costo de la llamada a EVA:", errCosto);
         }
       } catch (err) {
         controller.enqueue(
