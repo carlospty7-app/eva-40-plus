@@ -9,6 +9,7 @@ import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
 import { Reveal } from "@/components/app/ui/Reveal";
 import { Logo } from "@/components/app/ui/Logo";
 import { BienvenidaMarca } from "@/components/app/ui/BienvenidaMarca";
+import { cargarEstado, guardarEstado } from "@/lib/app/store";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -32,6 +33,8 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     // La creación de cuenta real (Supabase Auth) se conecta en la Sesión 6.
+    const estado = cargarEstado();
+    guardarEstado({ ...estado, perfil: { ...estado.perfil, email } });
     window.setTimeout(() => setCuentaCreada(true), 500);
   }
 

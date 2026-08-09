@@ -51,6 +51,9 @@ export type PuntoScore = {
 
 export type PerfilUsuaria = {
   nombre: string;
+  email?: string;
+  /** Foto de perfil como data URL (base64) — se guarda local hasta que haya storage real. */
+  fotoUrl?: string;
   metaLabel: string;
   dolorLabel: string;
   plan: "anual" | "mensual";
