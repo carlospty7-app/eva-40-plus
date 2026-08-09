@@ -1,4 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
+import { InfoTooltip } from "@/components/app/admin/InfoTooltip";
 
 const COLORES = {
   teal: { chip: "bg-brand-primary-soft text-brand-primary", barra: "bg-brand-primary" },
@@ -12,6 +13,7 @@ export function DatoHeroe({
   label,
   valor,
   insight,
+  info,
   tono = "neutral",
   color = "neutral",
   icon: Icon,
@@ -19,6 +21,7 @@ export function DatoHeroe({
   label: string;
   valor: ReactNode;
   insight?: string;
+  info?: string;
   tono?: "neutral" | "bien" | "atencion";
   color?: keyof typeof COLORES;
   icon?: ComponentType<{ className?: string }>;
@@ -28,10 +31,13 @@ export function DatoHeroe({
   const paleta = COLORES[color];
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-border-default/60 bg-surface-primary p-4 shadow-sm">
-      <span className={`absolute inset-x-0 top-0 h-[3px] ${paleta.barra}`} aria-hidden />
+    <div className="relative rounded-xl border border-border-default/60 bg-surface-primary p-4 shadow-sm">
+      <span className={`absolute inset-x-0 top-0 h-[3px] rounded-t-xl ${paleta.barra}`} aria-hidden />
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">{label}</p>
+        <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">
+          {label}
+          {info && <InfoTooltip texto={info} />}
+        </div>
         {Icon && (
           <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${paleta.chip}`}>
             <Icon className="h-3.5 w-3.5" />

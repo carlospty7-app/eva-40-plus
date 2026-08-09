@@ -53,6 +53,12 @@ export type PanelAdminData = {
   costoIaPorUsuarioActivo: number | null;
   costoIaPorModelo: { model: string; llamadas: number; costoUsd: number }[];
   costoIaUltimos14Dias: PuntoSerie[];
+
+  // Churn — real desde que existe el interruptor activar/desactivar de la pestaña Usuarios (no
+  // depende de Hotmart). null si todavía no hay base sobre la que medirlo (nadie existía antes
+  // de este mes).
+  bajasEsteMes: number;
+  churnEsteMesPct: number | null;
 };
 
 export type GastoCanal = {
@@ -138,7 +144,7 @@ export async function obtenerDatosPanelAdmin(): Promise<PanelAdminData> {
     await Promise.all([
       supabase
         .from("profiles")
-        .select("id, nombre, email, plan, trial_activo, fecha_cobro, racha_dias, created_at, activo")
+        .select("id, nombre, email, plan, trial_activo, fecha_cobro, racha_dias, created_at, activo, desactivado_en")
         .order("created_at", { ascending: false }),
       supabase.from("checkins_diarios").select("user_id, fecha").order("fecha", { ascending: false }),
       supabase
@@ -197,6 +203,12 @@ export async function obtenerDatosPanelAdmin(): Promise<PanelAdminData> {
     costoPorModeloMap.set(l.model, { llamadas: actual.llamadas + 1, costoUsd: actual.costoUsd + l.costo_usd });
   }
 
+  // Churn = cuentas que desactivaste este mes ÷ cuentas que ya existían al empezar el mes. Se
+  // apoya en `desactivado_en` (real desde el interruptor de Usuarios), no en pagos de Hotmart —
+  // por eso es "desactivación de cuenta", no necesariamente "cancelación de pago".
+  const bajasEsteMes = filasPerfiles.filter((p) => p.desactivado_en && p.desactivado_en >= inicioMes).length;
+  const baseChurn = filasPerfiles.filter((p) => p.created_at < inicioMes).length;
+
   return {
     usuarios,
     totalUsuarios: filasPerfiles.length,
@@ -240,5 +252,8 @@ export async function obtenerDatosPanelAdmin(): Promise<PanelAdminData> {
       .map(([model, v]) => ({ model, llamadas: v.llamadas, costoUsd: v.costoUsd }))
       .sort((a, b) => b.costoUsd - a.costoUsd),
     costoIaUltimos14Dias: agruparCostoPorDia(filasIa, 14),
+
+    bajasEsteMes,
+    churnEsteMesPct: baseChurn > 0 ? (bajasEsteMes / baseChurn) * 100 : null,
   };
 }

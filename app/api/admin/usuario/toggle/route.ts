@@ -28,7 +28,12 @@ export async function POST(req: Request) {
   }
 
   const admin = crearClienteAdmin();
-  const { error } = await admin.from("profiles").update({ activo: body.activo }).eq("id", body.userId);
+  // `desactivado_en` es lo que alimenta el churn real de la pestaña Negocio — se marca al
+  // desactivar y se limpia al reactivar, para no contar dos veces ni perder la fecha exacta.
+  const { error } = await admin
+    .from("profiles")
+    .update({ activo: body.activo, desactivado_en: body.activo ? null : new Date().toISOString() })
+    .eq("id", body.userId);
 
   if (error) return new Response("No se pudo actualizar", { status: 500 });
   return new Response(null, { status: 204 });
