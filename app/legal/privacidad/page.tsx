@@ -9,13 +9,28 @@ export default function PrivacidadPage() {
       </p>
       <p>
         <strong>Qué datos recopilamos:</strong> tu nombre, correo, respuestas del diagnóstico
-        (síntomas, hábitos, objetivos), tus check-ins diarios y datos de pago procesados por
-        nuestra plataforma de venta (Hotmart) — nosotros no almacenamos tu número de tarjeta.
+        (síntomas, hábitos, objetivos), tus check-ins diarios, tus conversaciones con EVA (nuestra
+        guía con inteligencia artificial), y datos de pago procesados por nuestra plataforma de
+        venta (Hotmart) — nosotros no almacenamos tu número de tarjeta.
+      </p>
+      <p>
+        <strong>Datos sensibles de salud:</strong> si usas el registro de ciclo/sangrado (opcional,
+        nunca obligatorio), esos datos se consideran especialmente sensibles bajo la ley. Al
+        registrarlos, das tu consentimiento explícito para que los usemos únicamente para mostrarte
+        patrones sobre tu propio cuerpo dentro de la app — nunca los compartimos ni los usamos para
+        ningún otro fin. Puedes borrarlos en cualquier momento escribiéndonos.
       </p>
       <p>
         <strong>Para qué los usamos:</strong> generar tu Score Metabólico y tu ruta semanal
-        personalizada, mejorar el servicio, y enviarte comunicaciones relacionadas con tu cuenta.
-        No vendemos tus datos a terceros.
+        personalizada, responder tus conversaciones con EVA, mejorar el servicio, y enviarte
+        comunicaciones relacionadas con tu cuenta. No vendemos tus datos a terceros.
+      </p>
+      <p>
+        <strong>Con quién los compartimos:</strong> con Supabase (donde vive la base de datos) y
+        con Anthropic (la empresa que provee la inteligencia artificial de EVA) — únicamente lo
+        necesario para que EVA pueda responderte, nunca para entrenar sus modelos ni para fines
+        publicitarios. Ambos son proveedores de infraestructura, no terceros que puedan usar tus
+        datos por su cuenta.
       </p>
       <p>
         <strong>Dónde se guardan:</strong> en infraestructura con controles de acceso (Supabase),
@@ -27,7 +42,7 @@ export default function PrivacidadPage() {
       </p>
       <p>
         <strong>IA:</strong> algunas partes de tu diagnóstico y ruta se generan con modelos de
-        inteligencia artificial. Ver nuestro Aviso de Bienestar para más detalle.
+        inteligencia artificial de Anthropic. Ver nuestro Aviso de Bienestar para más detalle.
       </p>
     </LegalPage>
   );

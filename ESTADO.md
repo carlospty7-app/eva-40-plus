@@ -1,6 +1,13 @@
 # ESTADO — EVA 40+
 Última actualización: 2026-08-09 (noche) | Sesión actual: 7 — Backoffice ampliado + retención de producto
 
+⏸️ NUEVO FLUJO DE TRABAJO (decisión del usuario, vigente desde ahora): dejamos de subir directo a
+`main`. Se creó la rama `desarrollo` (`git checkout -b desarrollo`, ya empujada a GitHub). A partir
+de aquí: los cambios se hacen y se suben a `desarrollo` → Vercel genera solo un link de VISTA
+PREVIA (no toca la app real en producción) → el usuario lo revisa → si aprueba, se fusiona
+`desarrollo` a `main` (ahí sí se publica de verdad). Nunca volver a empujar directo a `main` sin
+este paso, salvo que el usuario pida explícitamente lo contrario.
+
 ⏸️ CHECKPOINT — 2026-08-09 (noche): el usuario pidió una evaluación honesta "como usuaria real"
 de si se quedaría pagando 6 meses. Se dieron 5 debilidades concretas (Mi Ruta no evoluciona, falta
 seguimiento hormonal/de ciclo — la razón de ser del nombre del producto, sin recetas/fotos reales,
