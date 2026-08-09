@@ -1,5 +1,39 @@
 # ESTADO — EVA 40+
-Última actualización: 2026-08-09 | Sesión actual: 6 (app EN VIVO en producción; GitHub+Vercel conectados; Supabase pendiente)
+Última actualización: 2026-08-09 | Sesión actual: 6 (auditoría exhaustiva hecha — 3 críticos corregidos y verificados)
+
+⏸️ CHECKPOINT — 2026-08-09: auditoría completa de la app (comando `/auditoria --exhaustivo`, corrida
+por pedido explícito del usuario "explora toda la app... corrige errores críticos por tu cuenta").
+
+**Hallazgos y correcciones (los 3 críticos, ya en producción, commit `9325fc1`):**
+1. 🐛 **Racha nunca se reiniciaba** — `lib/app/store.ts` sumaba +1 en cada check-in nuevo sin
+   importar si hubo un hueco de días. Ahora `calcularRacha()` revisa si AYER tiene check-in; si no,
+   reinicia a 1. Verificado en vivo simulando un hueco de 5 días: pasó de mostrar "13" (falso) a "1"
+   (correcto) tras completar la revisión de hoy.
+2. 🐛 **`/api/eva` sin ningún control de abuso/costo** — cualquiera con la URL podía llamarlo sin
+   límite. Se agregó: tope de 800 caracteres por mensaje / 500 en notas (rechaza con 400), y un
+   rate-limit de 20 requests/5min por IP (in-memory — es un freno básico, NO reemplaza auth real;
+   cuando Supabase esté conectado hay que exigir sesión+plan de verdad, eso sigue pendiente).
+3. 🐛 **Botón "Continuar con Google" no hacía nada al tocarlo** (sin `onClick`, sin feedback) —
+   viola la regla propia del SO de "todo lo que parece tocable responde". Ahora está `disabled` con
+   texto "(próximamente)" en vez de muerto.
+Los 3 verificados en vivo (no solo `tsc`/`build`): racha con hueco simulado, rate-limit no bloquea
+uso normal (200 en el primer request) pero sí rechaza mensajes >800 caracteres (400), botón deshabilitado
+confirmado en el snapshot de accesibilidad.
+
+**Honestidad sobre "corrige todo para que sea 10/10" (pedido del usuario):** no llevé la app a un
+10/10 real y se lo dije así — quedan 2 cosas "Importantes" del reporte que NO son parches de código,
+son trabajo de arquitectura completo, no se pueden fingir resueltas:
+- Sin backend real (Supabase pendiente): toda la app vive en `localStorage`, una usuaria pierde todo
+  su progreso si cambia de celular o borra caché, aunque esté pagando.
+- Por lo mismo, el freno de `/api/eva` de arriba es un parche razonable, no seguridad real —
+  necesita sesión+plan verificados server-side, que depende de Supabase Auth.
+Puntaje honesto tras los fixes: **8/10** (subió de 6.5 — los 3 críticos de confianza/costo ya no
+existen), no 10/10 — el 10/10 real depende de cerrar Supabase, que es la próxima sesión técnica
+grande, no algo que se resuelva con más parches.
+
+Siguiente acción exacta: el usuario decide si retomamos Supabase ahora (tablas+RLS+auth real, ya con
+las herramientas MCP disponibles) o seguimos esperando los comentarios de Maru sobre la app en vivo
+antes de esa inversión técnica grande.
 
 ⏸️ CHECKPOINT — 2026-08-09: la app ya está desplegada de verdad y el usuario puede verla él mismo.
 
