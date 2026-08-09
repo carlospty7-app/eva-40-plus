@@ -3,7 +3,7 @@ import { construirSystemPromptDinamico, construirSystemPromptEstable } from "@/l
 import { crearClienteAdmin } from "@/lib/supabase/admin";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { estimarCostoUsd } from "@/lib/ai/pricing";
-import type { Checkin } from "@/lib/app/types";
+import type { Checkin, RegistroCiclo, SintomaCicloId } from "@/lib/app/types";
 
 export const runtime = "nodejs";
 
@@ -71,6 +71,39 @@ export async function POST(req: Request) {
     data: { user },
   } = await supabaseUsuario.auth.getUser();
 
+  // Se pide server-side (con la sesión real, no lo que mande el cliente) para que EVA "recuerde"
+  // de verdad los últimos días — así no depende de que el cliente lo mande bien, y RLS garantiza
+  // que solo ve los propios datos de esta usuaria.
+  let checkinsRecientes: Checkin[] = [];
+  if (user) {
+    const { data } = await supabaseUsuario
+      .from("checkins_diarios")
+      .select("fecha, inflamacion, energia, sueno, estres, antojos, digestion, notas")
+      .eq("user_id", user.id)
+      .order("fecha", { ascending: false })
+      .limit(7);
+    checkinsRecientes = (data ?? []).reverse();
+  }
+
+  let registrosCicloRecientes: RegistroCiclo[] = [];
+  if (user) {
+    const { data } = await supabaseUsuario
+      .from("registros_ciclo")
+      .select("fecha, sangrado, intensidad, sintomas, notas")
+      .eq("user_id", user.id)
+      .order("fecha", { ascending: false })
+      .limit(14);
+    registrosCicloRecientes = (data ?? [])
+      .reverse()
+      .map((r) => ({
+        fecha: r.fecha,
+        sangrado: r.sangrado,
+        ...(r.intensidad ? { intensidad: r.intensidad as 1 | 2 | 3 } : {}),
+        sintomas: r.sintomas as SintomaCicloId[],
+        ...(r.notas ? { notas: r.notas } : {}),
+      }));
+  }
+
   const stream = client.messages.stream({
     model: modelo,
     max_tokens: 1024,
@@ -82,7 +115,7 @@ export async function POST(req: Request) {
       },
       {
         type: "text",
-        text: construirSystemPromptDinamico(checkinHoy),
+        text: construirSystemPromptDinamico(checkinHoy, checkinsRecientes, registrosCicloRecientes),
       },
     ],
     messages: ultimos.map((m) => ({ role: m.role, content: m.content })),

@@ -7,11 +7,12 @@ import { Lightbulb, TrendingDown, TrendingUp } from "lucide-react";
 import { TopHeader } from "@/components/app/interna/TopHeader";
 import { ScoreRing } from "@/components/app/ui/ScoreRing";
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
-import { computeScoreDia, insightsAutomaticos, labelCampo, recomendacionParaCheckin } from "@/lib/app/engine";
-import { formatoCorto } from "@/lib/app/dates";
+import { computeScoreDia, insightsAutomaticos, insightsCiclo, labelCampo, recomendacionParaCheckin } from "@/lib/app/engine";
+import { formatoCorto, isoFecha } from "@/lib/app/dates";
 import { crearClienteNavegador } from "@/lib/supabase/client";
-import { cargarEstadoSupabase } from "@/lib/supabase/queries";
-import type { EstadoApp } from "@/lib/app/types";
+import { cargarEstadoSupabase, obtenerRegistrosCiclo } from "@/lib/supabase/queries";
+import { RegistroCicloCard } from "@/components/app/interna/RegistroCicloCard";
+import type { EstadoApp, RegistroCiclo } from "@/lib/app/types";
 
 /** Punto del gráfico: el último día (hoy) se destaca más grande con un halo, el resto son
  * puntos pequeños con contorno — para que se lea como datos reales, no solo una curva abstracta. */
@@ -40,13 +41,23 @@ function PuntoDelDia(props: unknown, esUltimo: boolean) {
 
 export default function ProgresoPage() {
   const [estado, setEstado] = useState<EstadoApp | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [registrosCiclo, setRegistrosCiclo] = useState<RegistroCiclo[]>([]);
+
+  async function recargarCiclo(uid: string) {
+    const supabase = crearClienteNavegador();
+    const registros = await obtenerRegistrosCiclo(supabase, uid);
+    setRegistrosCiclo(registros);
+  }
 
   useEffect(() => {
     const supabase = crearClienteNavegador();
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) return;
+      setUserId(data.user.id);
       const cargado = await cargarEstadoSupabase(supabase, data.user.id);
       if (cargado) setEstado(cargado);
+      recargarCiclo(data.user.id);
     });
   }, []);
 
@@ -59,6 +70,11 @@ export default function ProgresoPage() {
   }, [estado]);
 
   const insights = useMemo(() => (estado ? insightsAutomaticos(estado.checkins) : []), [estado]);
+  const insightsDeCiclo = useMemo(
+    () => (estado ? insightsCiclo(estado.checkins, registrosCiclo) : []),
+    [estado, registrosCiclo],
+  );
+  const registroCicloHoy = registrosCiclo.find((r) => r.fecha === isoFecha(new Date())) ?? null;
   const promedio = useMemo(() => {
     if (chartData.length === 0) return 0;
     return Math.round(chartData.reduce((acc, p) => acc + p.score, 0) / chartData.length);
@@ -212,6 +228,30 @@ export default function ProgresoPage() {
               </div>
             ))}
           </motion.div>
+        )}
+
+        {insightsDeCiclo.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.18 }}
+            className="mt-2 space-y-2"
+          >
+            {insightsDeCiclo.map((texto) => (
+              <div key={texto} className="flex items-start gap-2.5 rounded-xl bg-brand-accent-soft p-3.5">
+                <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-brand-accent" />
+                <p className="text-[13px] leading-relaxed text-txt-primary">{texto}</p>
+              </div>
+            ))}
+          </motion.div>
+        )}
+
+        {userId && (
+          <RegistroCicloCard
+            userId={userId}
+            registroHoy={registroCicloHoy}
+            onGuardado={() => recargarCiclo(userId)}
+          />
         )}
 
         <motion.div

@@ -1,4 +1,4 @@
-import type { Checkin, DiaRuta, EstadoDia } from "@/lib/app/types";
+import type { Checkin, DiaRuta, EstadoDia, RegistroCiclo } from "@/lib/app/types";
 
 /** Junta los alimentos recomendados de los 7 días de la ruta en una sola lista, sin repetidos. */
 export function listaDeComprasSemana(rutaSemana: DiaRuta[]): string[] {
@@ -114,6 +114,44 @@ export function labelCampo(campo: keyof EstadoDia): string {
   return CAMPO_LABEL[campo];
 }
 
+export type AdaptacionSemana = { metrica: keyof EstadoDia; promedio: number; mensaje: string };
+
+const UMBRAL_ALTO = 3.5; // desde acá, el promedio de un campo "malo si sube" cuenta como señal real
+const UMBRAL_BAJO = 2.5; // desde acá para abajo, un campo "malo si baja" cuenta como señal real
+
+/** Mira los últimos días REALES de check-in (no el día de hoy solo) y encuentra qué métrica viene
+ * peor en promedio — así Mi Ruta puede priorizar eso hoy en vez de repetir siempre el mismo tema
+ * fijo por día de la semana. Sin historial suficiente (usuaria nueva), devuelve null y la ruta se
+ * queda con su plan por defecto — no inventa una tendencia con 1-2 datos. */
+export function calcularAdaptacionSemana(checkinsRecientes: Checkin[]): AdaptacionSemana | null {
+  const ultimos = checkinsRecientes.slice(-7);
+  if (ultimos.length < 3) return null;
+
+  const promedio = (campo: keyof EstadoDia) => ultimos.reduce((s, c) => s + c[campo], 0) / ultimos.length;
+
+  let peorCampo: keyof EstadoDia | null = null;
+  let peorDistancia = 0;
+  (Object.keys(PEOR_ES_ALTO) as (keyof EstadoDia)[]).forEach((campo) => {
+    if (campo === "energia") return; // sin tema de ruta dedicado todavía en seed.ts
+    const prom = promedio(campo);
+    const distancia = PEOR_ES_ALTO[campo] ? prom - UMBRAL_ALTO : UMBRAL_BAJO - prom;
+    if (distancia > 0 && distancia > peorDistancia) {
+      peorDistancia = distancia;
+      peorCampo = campo;
+    }
+  });
+
+  if (!peorCampo) return null;
+  const prom = promedio(peorCampo);
+  const label = labelCampo(peorCampo);
+  const direccion = PEOR_ES_ALTO[peorCampo] ? "subió" : "bajó";
+  return {
+    metrica: peorCampo,
+    promedio: prom,
+    mensaje: `Esta semana tu ${label} ${direccion} a ${prom.toFixed(1)}/5 en promedio — hoy tu ruta prioriza eso.`,
+  };
+}
+
 /** Insight automático: solo lo emite si hay suficientes días en ambos grupos para comparar —
  * si no hay datos suficientes, no inventa una correlación. */
 export function insightsAutomaticos(checkins: Checkin[]): string[] {
@@ -144,6 +182,45 @@ export function insightsAutomaticos(checkins: Checkin[]): string[] {
   if (insights.length === 0) {
     insights.push("Sigue registrando tu check-in diario — en unos días te mostramos tus patrones.");
   }
+
+  return insights;
+}
+
+/** Correlación real entre los registros de ciclo y el check-in de ESE MISMO día de la MISMA
+ * usuaria — nunca compara contra otras usuarias ni asume un ciclo de 28 días. Solo habla si hay
+ * al menos 2 días con sangrado y 2 sin sangrado para comparar; si no, no dice nada (no inventa un
+ * patrón con 1 solo dato). Tono: valida, nunca diagnostica ni sugiere que hay algo "mal". */
+export function insightsCiclo(checkins: Checkin[], registros: RegistroCiclo[]): string[] {
+  const checkinPorFecha = new Map(checkins.map((c) => [c.fecha, c]));
+  const conCheckin = (r: RegistroCiclo) => checkinPorFecha.get(r.fecha);
+
+  const diasSangrado = registros.filter((r) => r.sangrado).map(conCheckin).filter((c): c is Checkin => !!c);
+  const diasSinSangrado = registros.filter((r) => !r.sangrado).map(conCheckin).filter((c): c is Checkin => !!c);
+
+  if (diasSangrado.length < 2 || diasSinSangrado.length < 2) return [];
+
+  const promedio = (arr: Checkin[], campo: keyof EstadoDia) =>
+    arr.reduce((s, c) => s + c[campo], 0) / arr.length;
+
+  const insights: string[] = [];
+
+  (["antojos", "inflamacion", "estres"] as const).forEach((campo) => {
+    const diff = promedio(diasSangrado, campo) - promedio(diasSinSangrado, campo);
+    if (diff >= 0.8) {
+      insights.push(
+        `Tu ${labelCampo(campo)} suele subir en tus días de sangrado — es un patrón común en tu propio cuerpo, no significa que algo esté mal.`,
+      );
+    }
+  });
+
+  (["energia", "sueno"] as const).forEach((campo) => {
+    const diff = promedio(diasSinSangrado, campo) - promedio(diasSangrado, campo);
+    if (diff >= 0.8) {
+      insights.push(
+        `Tu ${labelCampo(campo)} suele bajar en tus días de sangrado — vale la pena bajar el ritmo esos días sin culpa.`,
+      );
+    }
+  });
 
   return insights;
 }

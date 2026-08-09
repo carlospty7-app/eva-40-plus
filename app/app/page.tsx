@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
-import { Brain, Check, Cookie, Flame, Mic, Moon, Pencil, Square, Utensils, Zap } from "lucide-react";
+import { Brain, Check, Cookie, Flame, Mic, Moon, Pencil, Square, Users, Utensils, Zap } from "lucide-react";
 import { TopHeader } from "@/components/app/interna/TopHeader";
 import { EscalaCheckin } from "@/components/app/interna/EscalaCheckin";
 import { CelebracionDiaria } from "@/components/app/interna/CelebracionDiaria";
@@ -59,6 +59,16 @@ export default function HoyPage() {
   const [mensajeDiario, setMensajeDiario] = useState(mensajeDiarioAleatorio());
   const [semanaCompletaHoy, setSemanaCompletaHoy] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [checkinsHoyComunidad, setCheckinsHoyComunidad] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Dato real y agregado (nunca de una usuaria en particular) — solo se muestra si hay más de
+    // una persona hoy, para no decir "1 mujer" cuando esa "1" es ella misma.
+    fetch("/api/comunidad")
+      .then((r) => r.json())
+      .then((d) => setCheckinsHoyComunidad(typeof d.checkinsHoy === "number" ? d.checkinsHoy : null))
+      .catch(() => setCheckinsHoyComunidad(null));
+  }, []);
 
   useEffect(() => {
     const supabase = crearClienteNavegador();
@@ -175,6 +185,12 @@ export default function HoyPage() {
             <p className="mt-1 text-[13px] text-txt-secondary">
               Enfocada en {estado.perfil.dolorLabel}
             </p>
+            {checkinsHoyComunidad !== null && checkinsHoyComunidad >= 2 && (
+              <p className="mt-1.5 flex items-center gap-1.5 text-[12px] text-txt-tertiary">
+                <Users className="h-3.5 w-3.5 shrink-0" />
+                Hoy, {checkinsHoyComunidad} mujeres ya hicieron su revisión — no estás sola en esto.
+              </p>
+            )}
           </div>
           <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-brand-accent-soft py-1.5 pl-2 pr-3">
             <Flame className="h-4 w-4 text-brand-accent" />

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generarRutaSemanaReal } from "@/lib/app/seed";
 import { computeScoreDia } from "@/lib/app/engine";
-import type { EstadoApp, Checkin, EstadoDia, PerfilUsuaria } from "@/lib/app/types";
+import type { EstadoApp, Checkin, EstadoDia, PerfilUsuaria, RegistroCiclo, SintomaCicloId } from "@/lib/app/types";
 
 type FilaPerfil = {
   id: string;
@@ -199,4 +199,54 @@ export async function cargarEstadoSupabase(supabase: SupabaseClient, userId: str
     scoreHistorial: checkins.map((c) => ({ fecha: c.fecha, score: computeScoreDia(c) })),
     rachaDias: perfilResult.rachaDias,
   };
+}
+
+type FilaCiclo = {
+  fecha: string;
+  sangrado: boolean;
+  intensidad: 1 | 2 | 3 | null;
+  sintomas: string[];
+  notas: string | null;
+};
+
+function registroCicloDesdeFila(fila: FilaCiclo): RegistroCiclo {
+  return {
+    fecha: fila.fecha,
+    sangrado: fila.sangrado,
+    ...(fila.intensidad ? { intensidad: fila.intensidad } : {}),
+    sintomas: fila.sintomas as SintomaCicloId[],
+    ...(fila.notas ? { notas: fila.notas } : {}),
+  };
+}
+
+/** Registro libre del ciclo — sin tabla separada por "período", cada día es su propia fila (igual
+ * que el check-in diario), así no hace falta ningún cálculo de fecha de inicio/fin. */
+export async function obtenerRegistrosCiclo(supabase: SupabaseClient, userId: string): Promise<RegistroCiclo[]> {
+  const { data, error } = await supabase
+    .from("registros_ciclo")
+    .select("fecha, sangrado, intensidad, sintomas, notas")
+    .eq("user_id", userId)
+    .order("fecha", { ascending: true });
+  if (error || !data) return [];
+  return (data as FilaCiclo[]).map(registroCicloDesdeFila);
+}
+
+export async function registrarCiclo(
+  supabase: SupabaseClient,
+  userId: string,
+  fecha: string,
+  datos: { sangrado: boolean; intensidad?: 1 | 2 | 3; sintomas: SintomaCicloId[]; notas?: string },
+): Promise<boolean> {
+  const { error } = await supabase.from("registros_ciclo").upsert(
+    {
+      user_id: userId,
+      fecha,
+      sangrado: datos.sangrado,
+      intensidad: datos.sangrado ? (datos.intensidad ?? null) : null,
+      sintomas: datos.sintomas,
+      notas: datos.notas?.trim() || null,
+    },
+    { onConflict: "user_id,fecha" },
+  );
+  return !error;
 }

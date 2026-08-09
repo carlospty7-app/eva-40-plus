@@ -1,6 +1,16 @@
 import { DIA_LABELS, isoFecha, lunesDeEstaSemana, semanaActual } from "@/lib/app/dates";
 import type { Checkin, DiaRuta, EstadoApp, EstadoDia, MenuDia, MovimientoDia, PuntoScore } from "@/lib/app/types";
-import { computeScoreDia } from "@/lib/app/engine";
+import { calcularAdaptacionSemana, computeScoreDia } from "@/lib/app/engine";
+
+/** Qué tema de `RUTA_TEMAS` (por su índice) mejor le habla a cada métrica cuando viene mal en el
+ * promedio real de la semana — reutiliza contenido ya redactado, no inventa uno nuevo. */
+const TEMA_POR_METRICA: Partial<Record<keyof EstadoDia, number>> = {
+  antojos: 2, // "Corta el antojo de la tarde"
+  sueno: 3, // "Prepara tu sueño"
+  digestion: 1, // "Calma tu digestión"
+  inflamacion: 0, // "Arranca desinflamando la semana"
+  estres: 1, // comparte el enfoque de calma/respiración
+};
 
 /** Patrón semanal base (Lunes→Domingo) con correlación real intencional: los días de buen sueño
  * bajan la inflamación, los días de alto estrés suben los antojos — así los insights automáticos
@@ -92,7 +102,7 @@ const RUTA_TEMAS: Array<{
       duracionMin: 15,
       tipo: "caminata",
       descripcion:
-        "Una caminata corta a paso ligero después del almuerzo ayuda a regular el azúcar en sangre y baja el antojo de la tarde.",
+        "15 minutos a paso ligero justo después de almorzar (no hace falta ropa deportiva ni salir de casa — sirve caminar en el patio o subir y bajar escaleras). Ayuda a regular el azúcar en sangre y baja el antojo de la tarde antes de que aparezca.",
     },
   },
   {
@@ -128,7 +138,8 @@ const RUTA_TEMAS: Array<{
       titulo: "Caminata de cierre de semana",
       duracionMin: 20,
       tipo: "caminata",
-      descripcion: "Camina al aire libre a paso constante — ayuda a soltar la tensión acumulada de la semana.",
+      descripcion:
+        "20 minutos al aire libre a paso constante, sin pausas ni revisar el celular — solo caminar y respirar. Es la manera más simple de soltar la tensión que se acumuló en la semana antes del fin de semana.",
     },
   },
   {
@@ -164,7 +175,8 @@ const RUTA_TEMAS: Array<{
       titulo: "Movilidad de reinicio",
       duracionMin: 10,
       tipo: "movilidad",
-      descripcion: "Estiramientos suaves de cuerpo completo para cerrar la semana y prepararte para la que viene.",
+      descripcion:
+        "10 minutos de estiramiento suave: cuello y hombros (1 min), giros de cadera (1 min), estiramiento de piernas sentada (2 min), y respiración profunda tumbada boca arriba (2 min). No hace falta esterilla ni ropa especial — solo un espacio en el piso.",
     },
   },
 ];
@@ -176,17 +188,39 @@ export function temaPorIndiceDia(indice: number) {
   return RUTA_TEMAS[indice];
 }
 
-/** Genera los 7 días de la ruta de la semana actual (mismo contenido determinístico por
- * día-de-semana que usa el seed de demo), marcando `completado` según checkins REALES de la
- * usuaria — para usar con datos de Supabase en vez del historial de demo. */
+/** Genera los 7 días de la ruta de la semana actual — el contenido por día-de-semana es la base,
+ * pero el día de HOY se ajusta con lo que de verdad viene pasando en los check-ins recientes de la
+ * usuaria (`calcularAdaptacionSemana`): si sus antojos o su sueño vienen mal en promedio, hoy
+ * prioriza eso en vez de repetir siempre el mismo tema fijo. Marca `completado` según checkins
+ * REALES — para usar con datos de Supabase en vez del historial de demo. */
 export function generarRutaSemanaReal(checkinsReales: Checkin[]): DiaRuta[] {
   const fechasConCheckin = new Set(checkinsReales.map((c) => c.fecha));
-  return semanaActual(new Date()).map((fecha, i) => ({
-    dia: DIA_LABELS[i],
-    fecha: isoFecha(fecha),
-    ...RUTA_TEMAS[i],
-    completado: fechasConCheckin.has(isoFecha(fecha)),
-  }));
+  const hoyIso = isoFecha(new Date());
+  const adaptacion = calcularAdaptacionSemana(checkinsReales);
+  const temaAdaptado = adaptacion ? TEMA_POR_METRICA[adaptacion.metrica] : undefined;
+
+  return semanaActual(new Date()).map((fecha, i) => {
+    const fechaIso = isoFecha(fecha);
+    const base: DiaRuta = {
+      dia: DIA_LABELS[i],
+      fecha: fechaIso,
+      ...RUTA_TEMAS[i],
+      completado: fechasConCheckin.has(fechaIso),
+    };
+
+    if (fechaIso === hoyIso && adaptacion && temaAdaptado !== undefined) {
+      const tema = RUTA_TEMAS[temaAdaptado];
+      return {
+        ...base,
+        mision: adaptacion.mensaje,
+        alimentosRecomendados: tema.alimentosRecomendados,
+        alimentosLimitar: tema.alimentosLimitar,
+        habitoPrioritario: tema.habitoPrioritario,
+      };
+    }
+
+    return base;
+  });
 }
 
 export function generarSeed(): EstadoApp {
