@@ -1,5 +1,55 @@
 # ESTADO — EVA 40+
-Última actualización: 2026-08-06 | Sesión actual: 6 (mejoras de EVA implementadas; GitHub/Vercel/Supabase técnico siguen pendientes)
+Última actualización: 2026-08-09 | Sesión actual: 6 (app EN VIVO en producción; GitHub+Vercel conectados; Supabase pendiente)
+
+⏸️ CHECKPOINT — 2026-08-09: la app ya está desplegada de verdad y el usuario puede verla él mismo.
+
+**Repositorio y deploy (por fin cerrado):**
+- GitHub: `https://github.com/carlospty7-app/eva-40-plus` — repo creado por el usuario, código subido por mí
+  (`git init` local, remote origin, primer commit). `.gitignore` se amplió para excluir capturas de
+  QA sueltas en la raíz (`/*.png`), `.docx` de investigación y `.tmp` — sin tocar `public/` real.
+- Vercel: proyecto `eva-40-plus` bajo el team "EVA TEAM APP" (`team_NW3v4VwIgsJXQwZDarMc5AIV`),
+  importado directo desde GitHub por el usuario vía vercel.com/new. Env vars `ANTHROPIC_API_KEY` y
+  `AI_MODEL` cargadas ahí. **App viva en: https://eva-40-plus.vercel.app** — verificado en vivo
+  (landing carga, chat de EVA responde de verdad en producción). Cada `git push` futuro auto-despliega.
+- Herramientas MCP de Vercel y Supabase aparecieron disponibles en esta sesión (antes no estaban) —
+  se investigó `deploy_to_vercel` (subida directa de archivos sin git) para evitar el paso de GitHub,
+  pero se descartó: no soporta env vars y la app es grande (80+ archivos + assets reales) — la vía
+  GitHub→Vercel import fue la correcta. Quedan disponibles para cuando se conecte Supabase de verdad.
+
+**Ajustes de esta sesión ya en producción (commits `b275183`, `c46fd2b`, `675a941`):**
+- Logo agrandado en header landing/footer/login/onboarding/paywall/TopHeader — el tagline "MÁS
+  LIGERA · MÁS TU" (viene quemado en el PNG) ahora se lee bien a 375px.
+- Mi Ruta: más color y profundidad (feedback real del usuario viendo la app en su celular) —
+  "Alimentos recomendados" en caja verde, "Alimentos a limitar" en caja roja/coral, cada comida del
+  menú con su propio ícono de color (dorado/verde/sage), movimiento con tinte sage, sombras más
+  marcadas (`shadow-md`, `rounded-2xl`) en vez de todo plano con `shadow-sm`.
+- Nueva área de perfil en Cuenta: foto (sube cualquier imagen, se guarda como base64 en localStorage
+  hasta que haya storage real de Supabase), nombre editable inline (tap → escribe → Enter), correo
+  (se llena solo al crear cuenta en `/login`, ahí se guarda en `perfil.email`), más el plan/suscripción
+  que ya existía. Nuevos campos opcionales en `PerfilUsuaria`: `email`, `fotoUrl`.
+- 🐛 Se instaló Poppler (herramienta de PDFs) vía `winget` en este entorno porque hacía falta para
+  extraer imágenes reales del PDF de Maru — confirmado: **el PDF sí tiene fotos reales de comida**
+  (ej. galletas de almendra, coliflor) pero parecen banco de imágenes profesional, no fotos propias
+  de Maru — ⚠️ PENDIENTE: preguntarle a Maru si tiene licencia para reusarlas fuera del ebook antes
+  de meterlas a la app (riesgo legal si no). No se integraron fotos todavía.
+
+**Pedidos del usuario, decisiones tomadas:**
+- ¿Renombrar el chat de "EVA" a "Maru" para que se sienta más personal? — Se recomendó NO hacerlo
+  (usar el nombre real de una persona para un bot necesita su autorización y genera expectativa
+  falsa de que es ella respondiendo). Alternativa sugerida: EVA se presenta como "entrenada con el
+  criterio de Maru". El usuario no confirmó decisión final todavía — sigue como "EVA".
+- Registro y análisis de ciclo menstrual/patrones hormonales (correlación con energía/sueño/ánimo +
+  recomendaciones adaptativas) — **PAUSADO A PEDIDO EXPLÍCITO DEL USUARIO**: Maru está revisando la
+  app tal como está, van a esperar sus comentarios antes de construir esto. NO avanzar en esta
+  funcionalidad hasta que el usuario lo pida de nuevo. Si se retoma: ya hay un plan de 6 puntos
+  discutido (registro de sangrado/intensidad/síntomas, correlación real con datos propios de la
+  usuaria, ubicación en Progreso, y ojo con no forzar un modelo de ciclo regular de 28 días en
+  usuarias 40+ que suelen tener irregularidad real por perimenopausia).
+
+Siguiente acción exacta: esperar comentarios de Maru sobre la app en vivo. Mientras tanto, pendiente
+sin bloquear: (a) confirmar licencia de fotos del PDF con Maru, (b) decidir si EVA se re-presenta
+mencionando a Maru, (c) cuando Maru dé luz verde, retomar Supabase (tablas+RLS+auth real) usando las
+herramientas MCP ya disponibles.
 
 ⏸️ CHECKPOINT — 2026-08-06 (tarde): el usuario pidió varios cambios de producto para EVA. Se
 implementaron los aprobados, se pausaron los que chocaban con reglas de seguridad ya decididas:

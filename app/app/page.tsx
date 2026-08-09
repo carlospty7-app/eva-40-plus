@@ -212,6 +212,7 @@ export default function HoyPage() {
                     onChange={(e) => setNotas(e.target.value)}
                     placeholder="Escribe con tus palabras, o dicta con el micrófono..."
                     rows={3}
+                    maxLength={500}
                     className="w-full resize-none rounded-lg border border-border-default/60 bg-surface-primary p-3 pr-11 text-[13px] leading-relaxed text-txt-primary outline-none focus:border-brand-primary/50"
                   />
                   {dictadoDisponible && (

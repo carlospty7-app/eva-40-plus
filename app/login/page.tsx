@@ -75,9 +75,12 @@ export default function LoginPage() {
         <Reveal delay={0.08}>
         <button
           type="button"
-          className="mt-6 flex h-[52px] w-full items-center justify-center gap-2.5 rounded-full border border-border-strong text-[14px] font-semibold text-txt-primary"
+          disabled
+          aria-disabled="true"
+          title="Disponible próximamente"
+          className="mt-6 flex h-[52px] w-full cursor-not-allowed items-center justify-center gap-2.5 rounded-full border border-border-strong text-[14px] font-semibold text-txt-tertiary opacity-60"
         >
-          <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" aria-hidden>
+          <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 grayscale" aria-hidden>
             <path
               fill="#4285F4"
               d="M23.49 12.27c0-.85-.08-1.66-.22-2.45H12v4.63h6.47c-.28 1.47-1.13 2.72-2.4 3.56v2.96h3.88c2.27-2.09 3.58-5.17 3.58-8.7z"
@@ -95,7 +98,7 @@ export default function LoginPage() {
               d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.45-3.45C17.94 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.27 6.62l4 3.06C6.22 6.86 8.87 4.75 12 4.75z"
             />
           </svg>
-          Continuar con Google
+          Continuar con Google (próximamente)
         </button>
         </Reveal>
 

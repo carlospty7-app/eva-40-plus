@@ -193,6 +193,7 @@ export default function EvaPage() {
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Escribe tu pregunta..."
                   disabled={enviando}
+                  maxLength={800}
                   className="h-11 flex-1 rounded-full border border-border-default/60 bg-surface-primary px-4 text-[13.5px] text-txt-primary outline-none focus:border-brand-primary/50 disabled:opacity-60"
                 />
                 <button

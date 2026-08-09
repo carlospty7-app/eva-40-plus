@@ -83,12 +83,24 @@ export function diaRutaDeHoy(estado: EstadoApp) {
 
 /** Registra el check-in de hoy, recalcula racha e historial de score, y marca el día de la ruta
  * de hoy como completado — persiste el resultado y lo devuelve junto con si logró guardarse. */
+/** Calcula la nueva racha al registrar el check-in de hoy: si ya existía uno hoy (edición), la
+ * racha no cambia; si es la primera vez hoy, solo suma +1 cuando AYER también tiene check-in —
+ * si hubo un hueco (faltó uno o más días), la racha se reinicia a 1 en vez de seguir sumando.
+ * Sin esto, "días seguidos" queda mostrando un número falso después de cualquier día saltado. */
+function calcularRacha(estado: EstadoApp): number {
+  if (checkinDeHoy(estado)) return estado.rachaDias;
+  const ayer = isoFecha(new Date(Date.now() - 24 * 60 * 60 * 1000));
+  const huboAyer = estado.checkins.some((c) => c.fecha === ayer);
+  return huboAyer ? estado.rachaDias + 1 : 1;
+}
+
 export function registrarCheckinHoy(
   estado: EstadoApp,
   valores: EstadoDia,
   notas?: string
 ): { estado: EstadoApp; guardado: boolean } {
   const hoy = isoFecha(new Date());
+  const rachaDias = calcularRacha(estado);
   const checkins = estado.checkins.filter((c) => c.fecha !== hoy);
   checkins.push({ fecha: hoy, ...valores, ...(notas?.trim() ? { notas: notas.trim() } : {}) });
   checkins.sort((a, b) => a.fecha.localeCompare(b.fecha));
@@ -104,7 +116,7 @@ export function registrarCheckinHoy(
     checkins,
     scoreHistorial,
     rutaSemana,
-    rachaDias: estado.rachaDias + (checkinDeHoy(estado) ? 0 : 1),
+    rachaDias,
   };
   const guardado = guardarEstado(nuevo);
   return { estado: nuevo, guardado };
