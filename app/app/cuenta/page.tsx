@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  Bell,
+  BellRing,
   Camera,
   ChevronLeft,
   ChevronRight,
@@ -21,6 +23,7 @@ import {
   cargarEstadoSupabase,
   subirFotoPerfil,
 } from "@/lib/supabase/queries";
+import { activarRecordatorios, permisoYaDecidido, pushSoportado } from "@/lib/push/client";
 import type { EstadoApp } from "@/lib/app/types";
 
 const LEGALES = [
@@ -37,6 +40,21 @@ export default function CuentaPage() {
   const [nombreTemp, setNombreTemp] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [recordatoriosEstado, setRecordatoriosEstado] = useState<"inicial" | "activando" | "activado" | "rechazado">(
+    "inicial",
+  );
+
+  useEffect(() => {
+    if (permisoYaDecidido() && typeof Notification !== "undefined" && Notification.permission === "granted") {
+      setRecordatoriosEstado("activado");
+    }
+  }, []);
+
+  async function activarPush() {
+    setRecordatoriosEstado("activando");
+    const ok = await activarRecordatorios();
+    setRecordatoriosEstado(ok ? "activado" : "rechazado");
+  }
 
   useEffect(() => {
     const supabase = crearClienteNavegador();
@@ -194,6 +212,41 @@ export default function CuentaPage() {
               </Link>
             ))}
           </div>
+
+          {pushSoportado() && recordatoriosEstado !== "activado" && (
+            <div className="mt-4 rounded-xl border border-border-default/60 bg-surface-primary p-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-accent-soft text-brand-accent">
+                  <Bell className="h-4 w-4" />
+                </span>
+                <div className="flex-1">
+                  <p className="text-[13.5px] font-medium text-txt-primary">Avísame antes de perder mi racha</p>
+                  <p className="mt-0.5 text-[12px] text-txt-secondary">
+                    Un recordatorio en tu celular si se acerca el día y no has hecho tu revisión.
+                  </p>
+                  {recordatoriosEstado === "rechazado" ? (
+                    <p className="mt-2 text-[12px] text-status-warning">
+                      Tu navegador bloqueó los avisos — actívalos desde su configuración si cambias de idea.
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={activarPush}
+                      disabled={recordatoriosEstado === "activando"}
+                      className="mt-2.5 flex h-9 items-center rounded-full bg-brand-primary px-4 text-[12.5px] font-semibold text-txt-inverse disabled:opacity-60"
+                    >
+                      {recordatoriosEstado === "activando" ? "Activando…" : "Activar recordatorios"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          {recordatoriosEstado === "activado" && (
+            <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-status-success-soft p-3.5 text-[12.5px] font-medium text-status-success">
+              <BellRing className="h-4 w-4 shrink-0" /> Recordatorios activados.
+            </div>
+          )}
 
           <div className="mt-4 flex items-center gap-2 rounded-xl bg-surface-tertiary/50 p-3.5 text-[12px] text-txt-tertiary">
             <ShieldCheck className="h-4 w-4 shrink-0" />

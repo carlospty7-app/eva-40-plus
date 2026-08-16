@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
-import { CalendarCheck, House, MessagesSquare, TrendingUp } from "lucide-react";
+import { CalendarCheck, House, MessagesSquare, Trophy, TrendingUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 const TABS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/app", label: "Hoy", icon: House },
+  { href: "/app/retos", label: "Retos", icon: Trophy },
   { href: "/app/ruta", label: "Mi Ruta", icon: CalendarCheck },
   { href: "/app/progreso", label: "Progreso", icon: TrendingUp },
   { href: "/app/eva", label: "EVA", icon: MessagesSquare },
