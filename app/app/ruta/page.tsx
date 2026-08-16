@@ -24,10 +24,18 @@ import type { MovimientoDia } from "@/lib/app/types";
 import { AnimatedCounter } from "@/components/app/interna/AnimatedCounter";
 import { TopHeader } from "@/components/app/interna/TopHeader";
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
+import { BibliotecaYoga } from "@/components/app/interna/BibliotecaYoga";
 import { crearClienteNavegador } from "@/lib/supabase/client";
 import { cargarEstadoSupabase } from "@/lib/supabase/queries";
 import { isoFecha, nombreDia } from "@/lib/app/dates";
 import type { EstadoApp } from "@/lib/app/types";
+
+/** Los videos propios (bajados del Drive de Maru, en Supabase Storage) son archivos .mp4 reales —
+ * se reproducen dentro de la app. Los de YouTube (los primeros 4 días con video) siguen abriendo
+ * en pestaña nueva, porque no se puede incrustar un archivo directo de YouTube así. */
+function esArchivoDeVideo(url: string): boolean {
+  return url.endsWith(".mp4");
+}
 
 const ICONO_MOVIMIENTO: Record<MovimientoDia["tipo"], LucideIcon> = {
   yoga: Flower2,
@@ -291,21 +299,35 @@ export default function MiRutaPage() {
                 <p className="mt-1 text-[12.5px] leading-relaxed text-txt-secondary">
                   {dia.movimiento.descripcion}
                 </p>
-                {dia.movimiento.videoUrl && (
-                  <a
-                    href={dia.movimiento.videoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-brand-primary"
+                {dia.movimiento.videoUrl && esArchivoDeVideo(dia.movimiento.videoUrl) ? (
+                  <video
+                    key={dia.movimiento.videoUrl}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="mt-2.5 w-full rounded-lg bg-surface-tertiary"
                   >
-                    <PlayCircle className="h-4 w-4" />
-                    Ver rutina en video
-                  </a>
+                    <source src={dia.movimiento.videoUrl} type="video/mp4" />
+                  </video>
+                ) : (
+                  dia.movimiento.videoUrl && (
+                    <a
+                      href={dia.movimiento.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-brand-primary"
+                    >
+                      <PlayCircle className="h-4 w-4" />
+                      Ver rutina en video
+                    </a>
+                  )
                 )}
               </div>
             </div>
           </motion.div>
         )}
+
+        {!esFuturo && <BibliotecaYoga />}
 
         <Link
           href="/app/ruta/compras"

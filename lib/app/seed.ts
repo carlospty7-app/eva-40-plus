@@ -41,6 +41,23 @@ function mejorar(e: EstadoDia): EstadoDia {
   };
 }
 
+/** Videos reales de Maru en Supabase Storage (bajados de su Drive con permiso, 2026-08-16) — a
+ * diferencia de los links de YouTube de abajo, estos son archivos .mp4 propios, así que la UI los
+ * reproduce dentro de la app en vez de abrir una pestaña nueva (ver `esArchivoDeVideo` en
+ * `app/app/ruta/page.tsx`). */
+export const BASE_VIDEOS_YOGA = "https://tblpjdgshwdxqyruqxmr.supabase.co/storage/v1/object/public/yoga-videos/";
+
+/** Duración real verificada (no estimada) de cada clip — son videos cortos de Maru, no rutinas de
+ * varios minutos, así que se muestra la duración exacta para no prometer de más. */
+export const BIBLIOTECA_YOGA: { titulo: string; archivo: string; duracion: string }[] = [
+  { titulo: "Saludo al sol", archivo: "saludo-al-sol.mp4", duracion: "0:50" },
+  { titulo: "Saludo a la luna", archivo: "saludo-a-la-luna.mp4", duracion: "1:30" },
+  { titulo: "Guerreros", archivo: "guerreros.mp4", duracion: "0:33" },
+  { titulo: "Tablas", archivo: "tablas.mp4", duracion: "1:33" },
+  { titulo: "Hombros y cuello", archivo: "hombros-y-cuello.mp4", duracion: "2:32" },
+  { titulo: "Espalda baja", archivo: "espalda-baja.mp4", duracion: "2:00" },
+];
+
 const RUTA_TEMAS: Array<{
   mision: string;
   alimentosRecomendados: string[];
@@ -172,11 +189,12 @@ const RUTA_TEMAS: Array<{
       cena: "Sopa ligera o vegetales al vapor",
     },
     movimiento: {
-      titulo: "Movilidad de reinicio",
-      duracionMin: 10,
+      titulo: "Movilidad de caderas",
+      duracionMin: 1,
       tipo: "movilidad",
       descripcion:
-        "10 minutos de estiramiento suave: cuello y hombros (1 min), giros de cadera (1 min), estiramiento de piernas sentada (2 min), y respiración profunda tumbada boca arriba (2 min). No hace falta esterilla ni ropa especial — solo un espacio en el piso.",
+        "Clip corto de Maru (26 seg) para soltar las caderas antes de cerrar la semana — repítelo 2-3 veces seguidas si quieres más tiempo. Sin salto ni impacto, no hace falta esterilla ni ropa especial.",
+      videoUrl: `${BASE_VIDEOS_YOGA}movilidad-de-caderas.mp4`,
     },
   },
 ];
