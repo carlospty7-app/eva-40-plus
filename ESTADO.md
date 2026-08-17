@@ -1,5 +1,70 @@
 # ESTADO — EVA 40+
-Última actualización: 2026-08-09 (noche) | Sesión actual: 7 — Backoffice ampliado + retención de producto
+Última actualización: 2026-08-17 | Sesión actual: 7 — Retos EVA (Fase 1) construido y verificado
+
+⏸️ CHECKPOINT — 2026-08-17: se construyó **Retos EVA**, el sistema de microexperimentos de 7 días
+que el usuario pidió para retención ("no dietas, retos que la mujer pueda compartir"). Todo en la
+rama `desarrollo` (no en `main` todavía — flujo de vista previa antes de publicar, ver más abajo).
+
+**Flujo de trabajo nuevo (vigente desde esta sesión):** se dejó de subir directo a `main`. Ahora
+todo se sube a la rama `desarrollo` → Vercel genera un link de vista previa → el usuario lo revisa
+→ solo cuando aprueba se fusiona a `main` (recién ahí se publica de verdad). Nunca volver a saltarse
+este paso sin que el usuario lo pida explícitamente.
+
+**Motor real (no maqueta):**
+- `recomendarReto()` mira los últimos 7 días reales de check-in y recomienda DESINFLAMA 7, RESET 5
+  o ESCUCHA TU CUERPO según el indicador que viene peor — nunca el mismo reto para todas. Sin
+  historial suficiente, recomienda ESCUCHA TU CUERPO primero (no cambia nada, solo conoce a la
+  usuaria).
+- `compararResultadosReto()` compara el PROMEDIO de los primeros vs. últimos días del reto (no
+  día 1 contra día 7 exacto — decisión deliberada para no dejar que un solo mal día voltee el
+  veredicto). `decidirSiguientePaso()` clasifica en continuar/repetir/cambiar/detener con umbrales
+  conservadores (≥30% mejoró mucho, ≤-15% empeoró claramente).
+- Pantalla `/app/retos` completa: recomendación + elegir otro reto, cuestionario de salud (3
+  preguntas, una sola vez — hoy no bloquea nada porque ninguno de los 3 retos de Fase 1 lo necesita,
+  pero ya queda listo para cuando se sumen CARB SMART/HIDRATA en Fase 2), check-in diario de la
+  misión, barra de progreso de 7 días, pantalla "Tu cuerpo respondió" con comparación real por
+  indicador y botón "Sigamos 7 días más" (extiende sin perder el ciclo) o "Prueba otro reto".
+- Nueva pestaña "Retos" en la navegación principal (Hoy · Retos · Mi Ruta · Progreso · EVA).
+
+**Contenido REAL de DESINFLAMA 7 (Maru lo mandó completo durante esta sesión):**
+- Menú día por día (7 días × desayuno/almuerzo/cena/snack) con **28 fotos reales de los platos**
+  (Maru las subió a una carpeta local del proyecto, nombradas por día/comida — se comprimieron de
+  66MB a 3.1MB con `sharp` antes de subirlas a Supabase Storage, bucket público `reto-recetas`).
+- Lista de compras real por categoría (proteínas, vegetales, tubérculos y frutas, grasas y semillas,
+  hierbas y condimentos).
+- Rutina de movimiento diario real (activación matutina 5-7min, yoga suave 10-15min, caminata
+  después de comidas, respiración nocturna) — explícitamente NO es otro entrenamiento intenso.
+- RESET 5 y ESCUCHA TU CUERPO siguen con contenido genérico (sin menú/movimiento propio) — son
+  retos de comportamiento, no de alimentación, así que no lo necesitan.
+
+**Notificaciones push (Duolingo-style, con mensajes motivadores y caritas rotativos):**
+- VAPID + service worker (`public/sw.js`) + botón "Activar recordatorios" en Cuenta + Vercel Cron
+  diario (`vercel.json`, `/api/cron/recordatorios`) que avisa SOLO a quien ya tiene una racha real
+  (`racha_dias > 0`) y todavía no hizo su check-in hoy — nunca le avisa a alguien sin racha que
+  perder.
+- ⚠️ Pendiente real: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` y
+  `CRON_SECRET` están en `.env.local` (local) pero **faltan en Vercel** — hay que agregarlas ahí +
+  Redeploy antes de que el cron y las push funcionen en producción (mismo paso que ya hicimos antes
+  con las otras claves).
+- No se pudo probar el permiso real del navegador en Playwright headless (los prompts de
+  notificación no se pueden automatizar) — pendiente de una prueba manual en un dispositivo real.
+
+**Incidente durante la sesión:** el conector de Supabase falló con error 503 por un buen rato (no
+era el proyecto de Supabase — el dashboard del usuario se veía normal, era la conexión de esta
+sesión hacia él). Se resolvió pidiéndole al usuario que corriera el SQL de las tablas nuevas
+directamente en el SQL Editor de Supabase — funcionó, y la conexión se recuperó poco después.
+
+🔍 Verificado: `tsc` ✓ `build` ✓ · probado en vivo con Playwright de punta a punta: cuestionario de
+salud → recomendación → empezar DESINFLAMA 7 → check-in diario → simulé llegar al día 7 con datos
+reales de prueba → pantalla de resultado con comparación real (inflamación 4.0→2.0, digestión
+2.0→4.0, etc.) → "Sigamos 7 días más" (extiende a ciclo 2) → "Detener este reto" → vuelve a
+recomendación · las 4 fotos del menú del día 1 confirmadas visualmente (coinciden con el texto) ·
+datos de prueba borrados de la base al terminar.
+
+Siguiente acción exacta: el usuario revisa el link de vista previa de `desarrollo` y decide si
+fusiona a producción. Pendiente no bloqueante: agregar las 4 variables de push a Vercel, probar el
+permiso de notificaciones en un celular real, y cuando Maru mande contenido de más retos, sumarlos
+a la biblioteca (`lib/app/retos.ts`).
 
 ⏸️ NUEVO FLUJO DE TRABAJO (decisión del usuario, vigente desde ahora): dejamos de subir directo a
 `main`. Se creó la rama `desarrollo` (`git checkout -b desarrollo`, ya empujada a GitHub). A partir
