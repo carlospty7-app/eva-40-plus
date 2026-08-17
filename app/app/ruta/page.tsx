@@ -16,6 +16,7 @@ import {
   ShoppingBasket,
   Soup,
   Target,
+  Trophy,
   Utensils,
   UtensilsCrossed,
 } from "lucide-react";
@@ -25,10 +26,17 @@ import { AnimatedCounter } from "@/components/app/interna/AnimatedCounter";
 import { TopHeader } from "@/components/app/interna/TopHeader";
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
 import { BibliotecaYoga } from "@/components/app/interna/BibliotecaYoga";
+import { MenuDelDiaReto, MovimientoDelReto } from "@/components/app/interna/RetoWidgets";
 import { crearClienteNavegador } from "@/lib/supabase/client";
 import { cargarEstadoSupabase } from "@/lib/supabase/queries";
+import { obtenerRetoActivo, type RetoActivoRow } from "@/lib/supabase/retosQueries";
+import { obtenerReto } from "@/lib/app/retos";
 import { isoFecha, nombreDia } from "@/lib/app/dates";
 import type { EstadoApp } from "@/lib/app/types";
+
+function diasEntreFechas(a: string, b: string): number {
+  return Math.round((new Date(b).getTime() - new Date(a).getTime()) / (24 * 60 * 60 * 1000)) + 1;
+}
 
 /** Los videos propios (bajados del Drive de Maru, en Supabase Storage) son archivos .mp4 reales —
  * se reproducen dentro de la app. Los de YouTube (los primeros 4 días con video) siguen abriendo
@@ -46,14 +54,19 @@ const ICONO_MOVIMIENTO: Record<MovimientoDia["tipo"], LucideIcon> = {
 export default function MiRutaPage() {
   const [estado, setEstado] = useState<EstadoApp | null>(null);
   const [seleccionado, setSeleccionado] = useState(0);
+  const [retoActivo, setRetoActivo] = useState<RetoActivoRow | null>(null);
 
   useEffect(() => {
     const supabase = crearClienteNavegador();
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) return;
-      const cargado = await cargarEstadoSupabase(supabase, data.user.id);
+      const [cargado, reto] = await Promise.all([
+        cargarEstadoSupabase(supabase, data.user.id),
+        obtenerRetoActivo(supabase, data.user.id),
+      ]);
       if (!cargado) return;
       setEstado(cargado);
+      setRetoActivo(reto);
       const hoy = isoFecha(new Date());
       const idxHoy = cargado.rutaSemana.findIndex((d) => d.fecha === hoy);
       setSeleccionado(idxHoy >= 0 ? idxHoy : 0);
@@ -82,6 +95,12 @@ export default function MiRutaPage() {
   const esHoy = dia.fecha === hoyIso;
   const esFuturo = dia.fecha > hoyIso;
   const perdidoSeleccionado = dia.fecha < hoyIso && !dia.completado;
+
+  const dentroDelReto =
+    !!retoActivo && dia.fecha >= retoActivo.fechaInicio && dia.fecha <= retoActivo.fechaFin;
+  const retoDelDia = dentroDelReto ? obtenerReto(retoActivo!.retoSlug) : undefined;
+  const diaDelReto = dentroDelReto ? diasEntreFechas(retoActivo!.fechaInicio, dia.fecha) : 0;
+  const menuDelReto = retoDelDia?.menuDias?.[(diaDelReto - 1) % (retoDelDia.menuDias?.length || 1)];
 
   return (
     <div className="relative min-h-dvh overflow-hidden">
@@ -168,8 +187,19 @@ export default function MiRutaPage() {
             {nombreDia(dia.dia)} {esHoy ? "· Hoy" : esFuturo ? "· Por revelar" : ""}
           </p>
           <p className="mt-1.5 font-display text-[18px] font-medium leading-snug text-txt-primary">
-            {esFuturo ? "Esta misión se desbloquea cuando llegue el día" : dia.mision}
+            {esFuturo ? "Esta misión se desbloquea cuando llegue el día" : dentroDelReto && retoDelDia ? retoDelDia.mision : dia.mision}
           </p>
+
+          {dentroDelReto && retoDelDia && !esFuturo && (
+            <Link
+              href="/app/retos"
+              className="mt-2.5 flex items-center gap-2 rounded-xl bg-brand-primary-soft/70 p-2.5 text-[12px] font-medium text-brand-primary"
+            >
+              <Trophy className="h-3.5 w-3.5 shrink-0" />
+              Estás en tu reto: {retoDelDia.emoji} {retoDelDia.nombre} · Día {diaDelReto} de {retoDelDia.duracionDias}
+              <span className="ml-auto">Ver reto →</span>
+            </Link>
+          )}
 
           {esFuturo ? (
             <div className="mt-4 flex flex-col items-center gap-3 rounded-xl bg-surface-tertiary/50 px-4 py-7 text-center">
@@ -195,39 +225,45 @@ export default function MiRutaPage() {
                 <Target className="h-4 w-4 shrink-0 text-brand-primary" />
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-brand-primary">
-                    Hábito prioritario
+                    {dentroDelReto && retoDelDia ? "Tu misión del reto" : "Hábito prioritario"}
                   </p>
-                  <p className="mt-0.5 text-[13.5px] font-medium text-txt-primary">{dia.habitoPrioritario}</p>
+                  <p className="mt-0.5 text-[13.5px] font-medium text-txt-primary">
+                    {dentroDelReto && retoDelDia ? retoDelDia.mision : dia.habitoPrioritario}
+                  </p>
                 </div>
               </div>
 
-              <div className="mt-4 rounded-xl bg-brand-primary-soft/70 p-3">
-                <p className="flex items-center gap-2 text-[12.5px] font-semibold text-brand-primary">
-                  <Utensils className="h-4 w-4" /> Alimentos recomendados
-                </p>
-                <ul className="mt-2 space-y-1.5">
-                  {dia.alimentosRecomendados.map((a) => (
-                    <li key={a} className="flex items-center gap-2 text-[13px] text-txt-secondary">
-                      <Check className="h-3.5 w-3.5 shrink-0 text-brand-primary" strokeWidth={3} />
-                      {a}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {!menuDelReto && (
+                <>
+                  <div className="mt-4 rounded-xl bg-brand-primary-soft/70 p-3">
+                    <p className="flex items-center gap-2 text-[12.5px] font-semibold text-brand-primary">
+                      <Utensils className="h-4 w-4" /> Alimentos recomendados
+                    </p>
+                    <ul className="mt-2 space-y-1.5">
+                      {dia.alimentosRecomendados.map((a) => (
+                        <li key={a} className="flex items-center gap-2 text-[13px] text-txt-secondary">
+                          <Check className="h-3.5 w-3.5 shrink-0 text-brand-primary" strokeWidth={3} />
+                          {a}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-              <div className="mt-3 rounded-xl bg-status-error-soft/70 p-3">
-                <p className="flex items-center gap-2 text-[12.5px] font-semibold text-status-error">
-                  <Ban className="h-4 w-4" /> Alimentos a limitar
-                </p>
-                <ul className="mt-2 space-y-1.5">
-                  {dia.alimentosLimitar.map((a) => (
-                    <li key={a} className="flex items-center gap-2 text-[13px] text-txt-secondary">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-status-error" />
-                      {a}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                  <div className="mt-3 rounded-xl bg-status-error-soft/70 p-3">
+                    <p className="flex items-center gap-2 text-[12.5px] font-semibold text-status-error">
+                      <Ban className="h-4 w-4" /> Alimentos a limitar
+                    </p>
+                    <ul className="mt-2 space-y-1.5">
+                      {dia.alimentosLimitar.map((a) => (
+                        <li key={a} className="flex items-center gap-2 text-[13px] text-txt-secondary">
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-status-error" />
+                          {a}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
+              )}
 
               {esHoy && !dia.completado && (
                 <motion.div whileTap={{ scale: 0.98 }} className="mt-4">
@@ -253,7 +289,14 @@ export default function MiRutaPage() {
           )}
         </motion.div>
 
-        {!esFuturo && (
+        {!esFuturo && menuDelReto && (
+          <>
+            <MenuDelDiaReto menu={menuDelReto} />
+            {retoDelDia?.movimiento && <MovimientoDelReto movimiento={retoDelDia.movimiento} />}
+          </>
+        )}
+
+        {!esFuturo && !menuDelReto && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}

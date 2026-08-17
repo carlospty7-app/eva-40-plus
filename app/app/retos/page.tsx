@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Check, ChevronDown, ChevronUp, Minus, ShoppingBasket, Sparkles, Sunrise, Trophy } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Minus, Sparkles, Trophy } from "lucide-react";
 import { TopHeader } from "@/components/app/interna/TopHeader";
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
 import { TapButton } from "@/components/app/onboarding/TapButton";
 import { CuestionarioSalud } from "@/components/app/interna/CuestionarioSalud";
+import { MenuDelDiaReto, MovimientoDelReto, ListaComprasReto } from "@/components/app/interna/RetoWidgets";
 import { crearClienteNavegador } from "@/lib/supabase/client";
 import { cargarEstadoSupabase } from "@/lib/supabase/queries";
 import {
@@ -23,15 +24,7 @@ import {
   type FlagsSalud,
   type RetoActivoRow,
 } from "@/lib/supabase/retosQueries";
-import {
-  RETOS,
-  obtenerReto,
-  FAMILIA_LABEL,
-  type RetoDef,
-  type MenuRetoDia,
-  type MovimientoReto,
-  type GrupoCompra,
-} from "@/lib/app/retos";
+import { RETOS, obtenerReto, FAMILIA_LABEL, type RetoDef } from "@/lib/app/retos";
 import {
   compararResultadosReto,
   decidirSiguientePaso,
@@ -231,12 +224,13 @@ function VistaRecomendacion({
 }) {
   const recomendado = recomendarReto(checkins);
   const otros = RETOS.filter((r) => r.slug !== recomendado.slug);
+  const [verOtros, setVerOtros] = useState(false);
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-5">
       <div className="relative overflow-hidden rounded-2xl border border-brand-primary/30 bg-gradient-to-br from-surface-primary to-brand-primary-soft/60 p-4 shadow-md">
         <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] text-brand-primary">
-          <Sparkles className="h-3.5 w-3.5" /> Recomendado para ti
+          <Sparkles className="h-3.5 w-3.5" /> Esta semana te toca
         </p>
         <p className="mt-2 font-display text-[19px] font-medium text-txt-primary">
           {recomendado.emoji} {recomendado.nombre}
@@ -254,27 +248,36 @@ function VistaRecomendacion({
       </div>
 
       {otros.length > 0 && (
-        <div className="mt-4">
-          <p className="text-[12px] font-semibold text-txt-tertiary">O elige otro</p>
-          <div className="mt-2 space-y-2">
-            {otros.map((r) => (
-              <button
-                key={r.slug}
-                type="button"
-                disabled={procesando}
-                onClick={() => onEmpezar(r)}
-                className="flex w-full items-center justify-between rounded-xl border border-border-default/60 bg-surface-primary p-3.5 text-left shadow-sm"
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className="text-[18px]">{r.emoji}</span>
-                  <div>
-                    <p className="text-[13px] font-medium text-txt-primary">{r.nombre}</p>
-                    <p className="text-[11px] text-txt-tertiary">{FAMILIA_LABEL[r.familia]} · 7 días</p>
-                  </div>
+        <div className="mt-3 text-center">
+          <button
+            type="button"
+            onClick={() => setVerOtros((v) => !v)}
+            className="text-[12.5px] font-medium text-txt-tertiary underline underline-offset-2"
+          >
+            {verOtros ? "Ocultar otras opciones" : "¿Prefieres otro reto? Ver otras opciones"}
+          </button>
+        </div>
+      )}
+
+      {verOtros && (
+        <div className="mt-3 space-y-2">
+          {otros.map((r) => (
+            <button
+              key={r.slug}
+              type="button"
+              disabled={procesando}
+              onClick={() => onEmpezar(r)}
+              className="flex w-full items-center justify-between rounded-xl border border-border-default/60 bg-surface-primary p-3.5 text-left shadow-sm"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="text-[18px]">{r.emoji}</span>
+                <div>
+                  <p className="text-[13px] font-medium text-txt-primary">{r.nombre}</p>
+                  <p className="text-[11px] text-txt-tertiary">{FAMILIA_LABEL[r.familia]} · 7 días</p>
                 </div>
-              </button>
-            ))}
-          </div>
+              </div>
+            </button>
+          ))}
         </div>
       )}
     </motion.div>
@@ -377,113 +380,6 @@ function VistaProgreso({
         Detener este reto
       </button>
     </motion.div>
-  );
-}
-
-function MenuDelDiaReto({ menu }: { menu: MenuRetoDia }) {
-  const filas: { label: string; texto: string; foto?: string }[] = [
-    { label: "Desayuno", texto: menu.desayuno, foto: menu.fotos?.desayuno },
-    { label: "Almuerzo", texto: menu.almuerzo, foto: menu.fotos?.almuerzo },
-    { label: "Cena", texto: menu.cena, foto: menu.fotos?.cena },
-    { label: "Snack", texto: menu.snack, foto: menu.fotos?.snack },
-  ];
-
-  return (
-    <div className="mt-4 rounded-2xl border border-border-default/40 bg-surface-primary p-4 shadow-md">
-      <p className="text-[12.5px] font-semibold text-txt-primary">Menú de hoy</p>
-      <div className="mt-3 space-y-3">
-        {filas.map((f) => (
-          <div key={f.label} className="flex items-center gap-3">
-            {f.foto && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={f.foto} alt={f.texto} className="h-16 w-16 shrink-0 rounded-xl object-cover" />
-            )}
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">{f.label}</p>
-              <p className="mt-0.5 text-[13px] leading-snug text-txt-secondary">{f.texto}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MovimientoDelReto({ movimiento }: { movimiento: MovimientoReto }) {
-  const [abierto, setAbierto] = useState(false);
-  const secciones: { titulo: string; pasos: string[] }[] = [
-    { titulo: "☀️ Mañana", pasos: movimiento.mañana },
-    { titulo: "🌿 Yoga suave", pasos: movimiento.yoga },
-    { titulo: "🚶‍♀️ Durante el día", pasos: movimiento.duranteElDia },
-    { titulo: "🌙 Noche", pasos: movimiento.noche },
-  ];
-
-  return (
-    <div className="mt-4 rounded-2xl border border-border-default/40 bg-surface-primary shadow-md">
-      <button
-        type="button"
-        onClick={() => setAbierto((v) => !v)}
-        className="flex w-full items-center justify-between p-4"
-      >
-        <span className="flex items-center gap-2.5 text-[12.5px] font-semibold text-txt-primary">
-          <Sunrise className="h-4 w-4 text-brand-primary" /> Movimiento de hoy (15-25 min)
-        </span>
-        {abierto ? (
-          <ChevronUp className="h-4 w-4 text-txt-tertiary" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-txt-tertiary" />
-        )}
-      </button>
-      {abierto && (
-        <div className="space-y-3 px-4 pb-4">
-          {secciones.map((s) => (
-            <div key={s.titulo}>
-              <p className="text-[12px] font-semibold text-txt-primary">{s.titulo}</p>
-              <ul className="mt-1 space-y-1">
-                {s.pasos.map((paso) => (
-                  <li key={paso} className="text-[12.5px] leading-relaxed text-txt-secondary">
-                    • {paso}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ListaComprasReto({ grupos }: { grupos: GrupoCompra[] }) {
-  const [abierto, setAbierto] = useState(false);
-
-  return (
-    <div className="mt-4 rounded-2xl border border-border-default/40 bg-surface-primary shadow-md">
-      <button
-        type="button"
-        onClick={() => setAbierto((v) => !v)}
-        className="flex w-full items-center justify-between p-4"
-      >
-        <span className="flex items-center gap-2.5 text-[12.5px] font-semibold text-txt-primary">
-          <ShoppingBasket className="h-4 w-4 text-brand-primary" /> Lista de compras de la semana
-        </span>
-        {abierto ? (
-          <ChevronUp className="h-4 w-4 text-txt-tertiary" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-txt-tertiary" />
-        )}
-      </button>
-      {abierto && (
-        <div className="space-y-3 px-4 pb-4">
-          {grupos.map((g) => (
-            <div key={g.categoria}>
-              <p className="text-[12px] font-semibold text-txt-primary">{g.categoria}</p>
-              <p className="mt-1 text-[12.5px] leading-relaxed text-txt-secondary">{g.items.join(" · ")}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
   );
 }
 
