@@ -339,9 +339,6 @@ export default function MiRutaPage() {
                   Movimiento del día · {dia.movimiento.duracionMin} min · por Maru
                 </p>
                 <p className="mt-0.5 text-[13.5px] font-medium text-txt-primary">{dia.movimiento.titulo}</p>
-                <p className="mt-1 text-[12.5px] leading-relaxed text-txt-secondary">
-                  {dia.movimiento.descripcion}
-                </p>
                 {dia.movimiento.videoUrl && esArchivoDeVideo(dia.movimiento.videoUrl) ? (
                   <video
                     key={dia.movimiento.videoUrl}
