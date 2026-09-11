@@ -1,5 +1,62 @@
 # ESTADO — EVA 40+
-Última actualización: 2026-09-11 | Sesión actual: 8 — Stripe conectado como pasarela de pago
+Última actualización: 2026-09-11 (tarde) | Sesión actual: 8 — Sección de Ciclo + ajustes de chat EVA
+
+⏸️ CHECKPOINT — 2026-09-11 (tarde): a pedido del usuario y Maru (revisando la app juntos), se
+construyó una **sección propia de Ciclo** (`/app/ciclo`, reemplaza la tarjeta que vivía escondida en
+Progreso) inspirada en apps tipo Clue — pero **descriptiva, nunca predictiva**: se decidió
+explícitamente NO copiar el conteo regresivo/predicción de próximo período de Clue, porque a los
+40-55 con perimenopausia el ciclo es irregular y esa predicción normalmente estaría mal. Se
+mantienen los colores de marca de EVA (no el rojo/turquesa de Clue).
+
+**Qué incluye:**
+- Calendario mensual navegable (← mes →), cada día coloreado según intensidad de sangrado real +
+  punto para días con check-in — toca cualquier día PASADO para registrar/editar ese día (antes solo
+  se podía registrar "hoy"; `RegistroCicloCard` se generalizó para aceptar cualquier `fecha`).
+- Resumen del mes: días de sangrado + promedio histórico de días ENTRE períodos (`promedioDiasEntreCiclos`
+  en `lib/app/engine.ts`) — solo aparece con ≥3 rachas de sangrado detectadas, nunca inventa un
+  número con poco historial, y es explícitamente "histórico", no una cuenta regresiva.
+- Correlaciones reales con inflamación/energía/sueño/digestión (`insightsCiclo`, ya existía, se le
+  agregó digestión) y con peso (`insightsPeso`, nueva) — **se corrigió un bug de diseño real
+  encontrado probando con datos**: la versión original exigía que la usuaria marcara a mano "hoy NO
+  sangré" para tener el lado de comparación, algo que casi nadie hace en la práctica. Ahora "sin
+  sangrado" = cualquier check-in/medición que no tenga sangrado registrado ese día — mucho más
+  realista sin perder honestidad (nunca inventa una ausencia, solo la infiere de que no hay dato de
+  sangrado).
+- Palabra de aliento contextual (rota entre 3 mensajes según haya o no sangrado hoy).
+- Tarjeta de **peso y talla** (usa `registrarMedida`/`obtenerMedidas`, ya existían en
+  `retosQueries.ts` sin UI) — resuelve el pendiente viejo de "falta pantalla de peso".
+- Link honesto a "Ve tu Ruta de hoy" — a propósito NO dice que Mi Ruta se ajusta sola al ciclo
+  (no es cierto, Mi Ruta se adapta por check-ins generales, no por `registros_ciclo`), solo invita a
+  mirarla.
+- Progreso ya no tiene el registro de ciclo ni sus insights — quedó una sola tarjeta-link a
+  `/app/ciclo` con un conteo de días registrados este mes.
+
+**Bug real encontrado y corregido en el camino (no relacionado al ciclo):** al conectar Stripe antes
+en esta sesión, el flujo de login mandaba a CUALQUIER inicio de sesión exitoso (incluidas cuentas
+YA existentes) a través de `continuarAPago()` — es decir, una usuaria que ya pagó habría sido
+mandada al checkout de Stripe cada vez que iniciara sesión. Corregido: el checkout solo se dispara
+tras crear una cuenta nueva; iniciar sesión en una cuenta existente va directo a `/app` como antes.
+
+**Ajuste de copy en EVA (pedido aparte, mismo día):** el botón para chatear libremente decía **"Es
+otra cosa"** — el usuario señaló que no se entendía que ahí se podía preguntar cualquier cosa.
+Cambiado a "Escríbeme lo que quieras" + subtítulo "Como un chat — pregunta cualquier cosa, sin
+opciones fijas", y el encabezado de la pantalla ahora dice "Háblame como le hablarías a Maru" —
+refuerza el marco ya decidido antes (EVA no se renombra a "Maru", pero se presenta con su criterio).
+
+🔍 Verificado: `tsc` ✓ `build` ✓ · probado en vivo con una cuenta de prueba creada por la API admin
+de Supabase (para saltar el límite de correo) con 60 días de check-ins sintéticos + 3 rachas de
+sangrado + mediciones de peso — las 5 correlaciones aparecieron correctamente, el promedio histórico
+mostró 28 días (coincide con los datos de prueba), el calendario coloreó bien las intensidades.
+Cuenta y datos de prueba borrados al terminar. Pantalla de EVA confirmada visualmente con el nuevo
+copy.
+
+Siguiente paso: el usuario sigue con lo de Stripe (crear productos, pasar Secret Key) — quedó
+pausado para atender este pedido de Ciclo primero, según sus propias palabras.
+
+⏸️ CHECKPOINT — 2026-09-11: se decidió Stripe en vez de Hotmart (Panamá no está soportado por
+Stripe para abrir cuenta, pero el usuario ya tiene una LLC en EE.UU. con cuenta en Mercury, así que
+sí puede usarlo). **Sin reparto automático (Connect)**: todo se cobra a la cuenta del usuario y él le
+paga su parte a Maru de forma manual — decisión explícita del usuario, no construir Connect.
 
 ⏸️ CHECKPOINT — 2026-09-11: se decidió Stripe en vez de Hotmart (Panamá no está soportado por
 Stripe para abrir cuenta, pero el usuario ya tiene una LLC en EE.UU. con cuenta en Mercury, así que

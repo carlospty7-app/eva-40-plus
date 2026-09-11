@@ -95,8 +95,8 @@ export default function LoginPage() {
     const { data: dataSignIn, error: errSignIn } = await supabase.auth.signInWithPassword({ email, password });
 
     if (dataSignIn.session) {
-      setCuentaCreada(true);
-      setLoading(false);
+      // Cuenta ya existente que inicia sesión de nuevo — nunca debe volver a pasar por el pago.
+      router.push("/app");
       return;
     }
 

@@ -1,4 +1,5 @@
 import type { Checkin, DiaRuta, EstadoDia, RegistroCiclo } from "@/lib/app/types";
+import { diferenciaDias, isoFecha } from "@/lib/app/dates";
 
 /** Junta los alimentos recomendados de los 7 días de la ruta en una sola lista, sin repetidos. */
 export function listaDeComprasSemana(rutaSemana: DiaRuta[]): string[] {
@@ -187,15 +188,16 @@ export function insightsAutomaticos(checkins: Checkin[]): string[] {
 }
 
 /** Correlación real entre los registros de ciclo y el check-in de ESE MISMO día de la MISMA
- * usuaria — nunca compara contra otras usuarias ni asume un ciclo de 28 días. Solo habla si hay
+ * usuaria — nunca compara contra otras usuarias ni asume un ciclo de 28 días. "Sin sangrado" es
+ * cualquier check-in que NO tenga un registro de sangrado ese día (no exige que la usuaria marque
+ * a mano "hoy no sangré" — en la práctica casi nadie registra lo que NO le pasa). Solo habla si hay
  * al menos 2 días con sangrado y 2 sin sangrado para comparar; si no, no dice nada (no inventa un
  * patrón con 1 solo dato). Tono: valida, nunca diagnostica ni sugiere que hay algo "mal". */
 export function insightsCiclo(checkins: Checkin[], registros: RegistroCiclo[]): string[] {
-  const checkinPorFecha = new Map(checkins.map((c) => [c.fecha, c]));
-  const conCheckin = (r: RegistroCiclo) => checkinPorFecha.get(r.fecha);
+  const sangradoPorFecha = new Set(registros.filter((r) => r.sangrado).map((r) => r.fecha));
 
-  const diasSangrado = registros.filter((r) => r.sangrado).map(conCheckin).filter((c): c is Checkin => !!c);
-  const diasSinSangrado = registros.filter((r) => !r.sangrado).map(conCheckin).filter((c): c is Checkin => !!c);
+  const diasSangrado = checkins.filter((c) => sangradoPorFecha.has(c.fecha));
+  const diasSinSangrado = checkins.filter((c) => !sangradoPorFecha.has(c.fecha));
 
   if (diasSangrado.length < 2 || diasSinSangrado.length < 2) return [];
 
@@ -213,7 +215,7 @@ export function insightsCiclo(checkins: Checkin[], registros: RegistroCiclo[]): 
     }
   });
 
-  (["energia", "sueno"] as const).forEach((campo) => {
+  (["energia", "sueno", "digestion"] as const).forEach((campo) => {
     const diff = promedio(diasSinSangrado, campo) - promedio(diasSangrado, campo);
     if (diff >= 0.8) {
       insights.push(
@@ -223,6 +225,58 @@ export function insightsCiclo(checkins: Checkin[], registros: RegistroCiclo[]): 
   });
 
   return insights;
+}
+
+/** Correlación entre el ciclo y el PESO — separada de `insightsCiclo` porque las mediciones de
+ * peso son mucho más escasas que el check-in diario (no todas las usuarias lo registran seguido).
+ * "Sin sangrado" es cualquier medición que no coincida con un día de sangrado registrado (mismo
+ * criterio que `insightsCiclo`). Solo habla si hay al menos 2 mediciones de cada lado — nunca
+ * estima ni interpola un peso que no se pesó. */
+export function insightsPeso(
+  registros: RegistroCiclo[],
+  medidas: { fecha: string; pesoKg: number | null }[],
+): string[] {
+  const sangradoPorFecha = new Set(registros.filter((r) => r.sangrado).map((r) => r.fecha));
+  const pesoPorFecha = new Map(medidas.filter((m) => m.pesoKg != null).map((m) => [m.fecha, m.pesoKg as number]));
+
+  const pesosSangrado: number[] = [];
+  const pesosSinSangrado: number[] = [];
+  pesoPorFecha.forEach((peso, fecha) => {
+    (sangradoPorFecha.has(fecha) ? pesosSangrado : pesosSinSangrado).push(peso);
+  });
+
+  if (pesosSangrado.length < 2 || pesosSinSangrado.length < 2) return [];
+
+  const promedio = (arr: number[]) => arr.reduce((s, v) => s + v, 0) / arr.length;
+  const diff = promedio(pesosSangrado) - promedio(pesosSinSangrado);
+
+  if (Math.abs(diff) < 0.4) return [];
+  return [
+    diff > 0
+      ? "Tu peso registrado suele ser un poco más alto en tus días de sangrado — es normal (retención de líquidos), no significa que hayas subido de peso de verdad."
+      : "Tu peso registrado suele ser un poco más bajo en tus días de sangrado, según lo que has anotado.",
+  ];
+}
+
+/** Promedio de días ENTRE inicios de sangrado, calculado solo con datos ya ocurridos — es un dato
+ * descriptivo del historial de la usuaria, nunca una predicción de cuándo será el próximo. Pide al
+ * menos 3 inicios registrados (2 intervalos completos) antes de decir cualquier número, porque con
+ * 1 solo intervalo cualquier variación normal se leería como "el patrón". */
+export function promedioDiasEntreCiclos(registros: RegistroCiclo[]): number | null {
+  const diasSangrado = registros.filter((r) => r.sangrado).map((r) => r.fecha).sort();
+  const set = new Set(diasSangrado);
+
+  const inicios = diasSangrado.filter((fecha) => {
+    const anterior = new Date(fecha);
+    anterior.setDate(anterior.getDate() - 1);
+    return !set.has(isoFecha(anterior));
+  });
+
+  if (inicios.length < 3) return null;
+
+  const brechas: number[] = [];
+  for (let i = 1; i < inicios.length; i++) brechas.push(diferenciaDias(inicios[i - 1], inicios[i]));
+  return Math.round(brechas.reduce((a, b) => a + b, 0) / brechas.length);
 }
 
 export type ProtocoloEva = {
