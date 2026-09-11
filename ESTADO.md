@@ -1,5 +1,60 @@
 # ESTADO — EVA 40+
-Última actualización: 2026-08-17 | Sesión actual: 7 — Retos EVA (Fase 1) construido y verificado
+Última actualización: 2026-09-11 | Sesión actual: 8 — Stripe conectado como pasarela de pago
+
+⏸️ CHECKPOINT — 2026-09-11: se decidió Stripe en vez de Hotmart (Panamá no está soportado por
+Stripe para abrir cuenta, pero el usuario ya tiene una LLC en EE.UU. con cuenta en Mercury, así que
+sí puede usarlo). **Sin reparto automático (Connect)**: todo se cobra a la cuenta del usuario y él le
+paga su parte a Maru de forma manual — decisión explícita del usuario, no construir Connect.
+
+**Lo que se construyó (en `desarrollo`, sin probar un pago real todavía — falta que el usuario cree
+los productos en su Stripe y pegue las claves):**
+- `lib/stripe/server.ts`: cliente de Stripe + mapeo plan↔Price ID (falla fuerte si faltan las env vars).
+- `app/api/stripe/checkout/route.ts`: crea la sesión de pago (7 días de prueba, luego cobro automático)
+  para la usuaria ya autenticada; crea el Customer de Stripe la primera vez y lo guarda en
+  `profiles.stripe_customer_id`. Verificado: responde 401 sin sesión.
+- `app/api/stripe/webhook/route.ts`: firma verificada (`stripe-signature` + `STRIPE_WEBHOOK_SECRET`) +
+  idempotente (tabla nueva `webhook_events`, clave primaria = id del evento — un mismo aviso
+  reenviado por Stripe no se vuelve a procesar). Escucha `checkout.session.completed`,
+  `customer.subscription.updated/deleted` y actualiza `profiles.plan/activo/trial_activo/fecha_cobro`
+  según el estado real de la suscripción. Verificado: responde 400 sin firma válida.
+- Flujo conectado: paywall (botón ahora pasa el plan elegido por URL) → login/registro (sin cambios)
+  → en vez de entrar directo a `/app`, la pantalla de bienvenida ahora dispara el checkout real de
+  Stripe; si falla, hay pantalla de error con "Intentar de nuevo" (nunca deja a la usuaria atascada).
+- Migración aplicada: `profiles.stripe_customer_id` / `stripe_subscription_id` + tabla
+  `webhook_events` (RLS sin políticas a propósito — solo el service role la toca). Advisor de
+  seguridad revisado: limpio (solo los INFO/WARN preexistentes esperados).
+- Todas las menciones a "Hotmart" cambiadas a "Stripe" (paywall, términos, reembolso, privacidad,
+  TrustBar, Guarantee, y los textos internos de `/admin`).
+
+🔍 Verificado: `tsc` ✓ `build` ✓ (rutas `/api/stripe/checkout` y `/api/stripe/webhook` nuevas,
+dinámicas) · probado en vivo: `/api/stripe/checkout` → 401 sin sesión, `/api/stripe/webhook` → 400
+sin firma válida, texto "Stripe" confirmado visualmente en el paywall. **NO probado**: un pago real
+de punta a punta — falta que el usuario complete su parte (ver abajo) antes de poder hacerlo.
+
+⚠️ Pendiente del usuario, en orden, para que esto funcione de verdad:
+1. Crear los 2 productos recurrentes en su Stripe (Anual $71.88/año, Mensual $9.99/mes) y pasar los
+   2 Price ID.
+2. Pasar la Secret Key de Stripe (por una vía seguridad, no por chat) → va a `STRIPE_SECRET_KEY`.
+3. Agregar `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ANUAL`, `STRIPE_PRICE_MENSUAL` en Vercel (el webhook
+   secret se agrega en el paso 4, después de desplegar).
+4. Una vez desplegado, crear el webhook en Stripe apuntando a
+   `https://<dominio-real>/api/stripe/webhook`, eventos: `checkout.session.completed`,
+   `customer.subscription.updated`, `customer.subscription.deleted` → copiar el "Signing secret" →
+   `STRIPE_WEBHOOK_SECRET` en Vercel → redeploy.
+5. Hacer un pago de prueba de punta a punta antes de anunciar el lanzamiento.
+
+Pendiente no bloqueante, anotado para después: no existe todavía un "portal de cliente" de Stripe
+para que la usuaria cancele sola desde su cuenta (hoy el texto legal dice que cancela escribiendo a
+soporte) — se puede agregar después con el Customer Portal de Stripe si hace falta. El manejo de
+pagos fallidos (dunning) tampoco está construido — hoy un cobro fallido (`past_due`) no le corta el
+acceso de inmediato, pero tampoco hay ningún aviso automático a la usuaria todavía.
+
+Siguiente acción exacta: el usuario completa los 4 pasos de arriba (productos, claves, webhook) y
+avisa cuando estén listos para hacer la primera prueba de pago real juntos.
+
+⏸️ CHECKPOINT — 2026-08-17: se construyó **Retos EVA**, el sistema de microexperimentos de 7 días
+que el usuario pidió para retención ("no dietas, retos que la mujer pueda compartir"). Todo en la
+rama `desarrollo` (no en `main` todavía — flujo de vista previa antes de publicar, ver más abajo).
 
 ⏸️ CHECKPOINT — 2026-08-17: se construyó **Retos EVA**, el sistema de microexperimentos de 7 días
 que el usuario pidió para retención ("no dietas, retos que la mujer pueda compartir"). Todo en la
@@ -62,9 +117,32 @@ recomendación · las 4 fotos del menú del día 1 confirmadas visualmente (coin
 datos de prueba borrados de la base al terminar.
 
 Siguiente acción exacta: el usuario revisa el link de vista previa de `desarrollo` y decide si
-fusiona a producción. Pendiente no bloqueante: agregar las 4 variables de push a Vercel, probar el
-permiso de notificaciones en un celular real, y cuando Maru mande contenido de más retos, sumarlos
-a la biblioteca (`lib/app/retos.ts`).
+fusiona a producción. Pendiente no bloqueante: probar el permiso de notificaciones en un celular
+real, y cuando Maru mande contenido de más retos, sumarlos a la biblioteca (`lib/app/retos.ts`).
+
+⏸️ CHECKPOINT — 2026-08-17 (tarde): Retos EVA ya está en producción real (`main` == `desarrollo`,
+usuario le dio "Promote to Production" en Vercel directamente). Las 4 variables de push ya están
+cargadas en Vercel. Se corrigió además:
+- **Bug de recuperación de contraseña**: Supabase Auth tenía "Site URL" en `localhost:3000` y
+  "Redirect URLs" vacío — cualquier link de recuperación fuera de local rebotaba al inicio. Ya se
+  agregaron las URLs correctas (localhost, `eva-40-plus.vercel.app` y el comodín de previews). El
+  límite de correos gratuito de Supabase (`over_email_send_rate_limit`) sigue bloqueando el envío
+  por las pruebas repetidas de hoy — se libera solo con el tiempo; para que no vuelva a pasar hace
+  falta SMTP propio (Resend) en vez del correo gratuito de Supabase — pendiente, no urgente.
+- **Feedback del usuario sobre Retos vs Mi Ruta** (aplicado): antes daban información
+  potencialmente distinta (dos motores de recomendación independientes) y Retos mostraba 3 tarjetas
+  para elegir. Ahora: Retos EVA muestra UN solo reto sugerido con un botón ("Empezar este reto"),
+  las otras opciones quedan ocultas detrás de un link "Ver otras opciones". Y cuando hay un reto
+  activo, Mi Ruta dejó de dar su propia recomendación aparte — para los días dentro del reto,
+  muestra la misión, el menú real (con fotos) y el movimiento real de ESE reto (componentes
+  compartidos ahora en `components/app/interna/RetoWidgets.tsx`).
+- **Nota de diseño pendiente (usuario)**: dijo que la app se ve "opaca y sin vida" y sugirió botones
+  en color naranja — explícitamente pidió dejarlo así por ahora, no se tocó paleta ni botones.
+  Recordar esto si se retoma una pasada de diseño/pulido.
+
+Siguiente paso: el usuario todavía no pudo entrar a probar en vivo por el límite de correo de
+Supabase (ni para resetear su contraseña real ni para crear una cuenta de prueba) — falta que se
+libere solo, o montar Resend, para verificar visualmente el cambio de sincronización.
 
 ⏸️ NUEVO FLUJO DE TRABAJO (decisión del usuario, vigente desde ahora): dejamos de subir directo a
 `main`. Se creó la rama `desarrollo` (`git checkout -b desarrollo`, ya empujada a GitHub). A partir

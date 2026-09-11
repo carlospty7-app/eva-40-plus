@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, ChevronLeft, CircleAlert } from "lucide-react";
@@ -28,6 +28,34 @@ export default function LoginPage() {
   const [recuperarEnviado, setRecuperarEnviado] = useState(false);
   const [recuperarError, setRecuperarError] = useState<string | null>(null);
   const [recuperarLoading, setRecuperarLoading] = useState(false);
+  const [plan, setPlan] = useState<"anual" | "mensual">("anual");
+  const [errorPago, setErrorPago] = useState<string | null>(null);
+  const [iniciandoPago, setIniciandoPago] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("plan") === "mensual") setPlan("mensual");
+  }, []);
+
+  async function continuarAPago() {
+    if (iniciandoPago) return;
+    setErrorPago(null);
+    setIniciandoPago(true);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+      if (!res.ok) throw new Error("checkout_failed");
+      const data = await res.json();
+      if (!data.url) throw new Error("checkout_failed");
+      window.location.href = data.url;
+    } catch {
+      setIniciandoPago(false);
+      setErrorPago("No pudimos abrir la pantalla de pago — intenta de nuevo.");
+    }
+  }
 
   async function enviarRecuperacion() {
     if (!EMAIL_RE.test(email)) {
@@ -128,7 +156,23 @@ export default function LoginPage() {
   }
 
   if (cuentaCreada) {
-    return <BienvenidaMarca onContinuar={() => router.push("/app")} />;
+    if (errorPago) {
+      return (
+        <div className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">
+          <CircleAlert className="h-8 w-8 text-status-error" />
+          <h1 className="mt-4 font-display text-[20px] font-medium text-txt-primary">
+            Algo falló al abrir el pago
+          </h1>
+          <p className="mt-2 max-w-[280px] text-[13.5px] text-txt-secondary">{errorPago}</p>
+          <div className="mt-5 w-full max-w-[220px]">
+            <TapButton disabled={iniciandoPago} onClick={continuarAPago}>
+              {iniciandoPago ? "Un momento…" : "Intentar de nuevo"}
+            </TapButton>
+          </div>
+        </div>
+      );
+    }
+    return <BienvenidaMarca onContinuar={continuarAPago} />;
   }
 
   if (modoRecuperar) {

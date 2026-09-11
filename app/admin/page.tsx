@@ -97,7 +97,7 @@ export default async function AdminPage() {
           label="Prueba vencida"
           valor={datos.trialVencido}
           color="neutral"
-          info="A estas usuarias ya se les venció la prueba — deberían pasar a pago cuando conectes Hotmart."
+          info="A estas usuarias ya se les venció la prueba — deberían pasar a pago cuando conectes Stripe."
         />
       </div>
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -107,7 +107,7 @@ export default async function AdminPage() {
       <div className="mt-3">
         <NoMedido>
           💸 Ingresos, ganancia real y cancelaciones: <b>no medido todavía</b> — se activa solo
-          cuando conectes el cobro por Hotmart (ver guía de venta).
+          cuando conectes el cobro por Stripe (ver guía de venta).
         </NoMedido>
       </div>
     </div>
@@ -147,7 +147,7 @@ export default async function AdminPage() {
         </div>
       )}
       <div className="mt-3">
-        <NoMedido>🔌 Estado de webhooks de pago: no medido — no hay integración de Hotmart aún.</NoMedido>
+        <NoMedido>🔌 Estado de webhooks de pago: no medido — no hay integración de Stripe aún.</NoMedido>
       </div>
     </div>
   );
@@ -217,7 +217,7 @@ export default async function AdminPage() {
           label="MRR"
           valor="No medido"
           color="neutral"
-          info="Ingreso mensual recurrente: lo que cobras cada mes sumando todas las suscripciones activas. Se activa solo cuando conectes el cobro real por Hotmart."
+          info="Ingreso mensual recurrente: lo que cobras cada mes sumando todas las suscripciones activas. Se activa solo cuando conectes el cobro real por Stripe."
         />
         <DatoHeroe
           label="LTV estimado"
@@ -253,12 +253,12 @@ export default async function AdminPage() {
           }
           tono={datos.churnEsteMesPct !== null && datos.churnEsteMesPct >= 10 ? "atencion" : "neutral"}
           color={datos.churnEsteMesPct !== null && datos.churnEsteMesPct >= 10 ? "coral" : "sage"}
-          info="Porcentaje de usuarias que desactivaste este mes sobre las que ya tenías al empezarlo. Hoy se basa en el interruptor activar/desactivar de la pestaña Usuarios, no todavía en cancelaciones de pago de Hotmart — cuando lo conectes, este número reflejará bajas reales por pago fallido, cancelación voluntaria o reembolso."
+          info="Porcentaje de usuarias que desactivaste este mes sobre las que ya tenías al empezarlo. Hoy se basa en el interruptor activar/desactivar de la pestaña Usuarios, no todavía en cancelaciones de pago de Stripe — cuando lo conectes, este número reflejará bajas reales por pago fallido, cancelación voluntaria o reembolso."
         />
       </div>
       <div className="mt-3">
         <NoMedido>
-          📊 El MRR, LTV y CAC se calculan solos cuando conectes el cobro real por Hotmart — hoy
+          📊 El MRR, LTV y CAC se calculan solos cuando conectes el cobro real por Stripe — hoy
           nadie ha pagado todavía, así que no hay ingresos que medir ni dividir entre el gasto de
           abajo. El churn de arriba sí es real, pero por ahora mide cuentas que TÚ desactivaste
           manualmente, no cancelaciones de pago.
@@ -328,7 +328,7 @@ export default async function AdminPage() {
           label="% de los ingresos"
           valor="No medido"
           color="neutral"
-          info="Qué tanto de lo que facturas se lo come la IA. Se activa cuando conectes el cobro real por Hotmart — la regla sana es que la IA cueste menos del 20% de lo que cobras."
+          info="Qué tanto de lo que facturas se lo come la IA. Se activa cuando conectes el cobro real por Stripe — la regla sana es que la IA cueste menos del 20% de lo que cobras."
         />
       </div>
 

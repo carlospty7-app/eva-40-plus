@@ -83,7 +83,7 @@ export default function PaywallPage() {
   function irALogin() {
     if (isPending) return;
     setIsPending(true);
-    router.push("/login");
+    router.push(`/login?plan=${plan}`);
   }
 
   const precio = plan === "anual" ? "$5.99/mes" : "$9.99/mes";
@@ -284,7 +284,7 @@ export default function PaywallPage() {
 
       <div className="relative mt-4 flex items-center justify-center gap-2 text-[11.5px] text-txt-tertiary">
         <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-        <span>Garantía 7 días · Pago seguro · Hotmart</span>
+        <span>Garantía 7 días · Pago seguro · Stripe</span>
       </div>
       </div>
 

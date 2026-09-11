@@ -11,7 +11,7 @@ export default function PrivacidadPage() {
         <strong>Qué datos recopilamos:</strong> tu nombre, correo, respuestas del diagnóstico
         (síntomas, hábitos, objetivos), tus check-ins diarios, tus conversaciones con EVA (nuestra
         guía con inteligencia artificial), y datos de pago procesados por nuestra plataforma de
-        venta (Hotmart) — nosotros no almacenamos tu número de tarjeta.
+        pago (Stripe) — nosotros no almacenamos tu número de tarjeta.
       </p>
       <p>
         <strong>Datos sensibles de salud:</strong> si usas el registro de ciclo/sangrado (opcional,

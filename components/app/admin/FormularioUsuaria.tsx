@@ -56,7 +56,7 @@ export function FormularioUsuaria() {
         </button>
       </div>
       <p className="mt-1 text-[12px] text-txt-secondary">
-        Crea la cuenta ya confirmada — útil si alguien pagó por fuera de Hotmart o el alta automática falló.
+        Crea la cuenta ya confirmada — útil si alguien pagó por fuera de Stripe o el alta automática falló.
       </p>
       <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         <input

@@ -14,8 +14,9 @@ export default function TerminosPage() {
       </p>
       <p>
         <strong>Suscripción:</strong> EVA 40+ se cobra mensual o anualmente, con un período de
-        prueba gratuito según el plan elegido. Puedes cancelar cuando quieras desde tu cuenta o
-        desde el panel de compra de Hotmart; la cancelación aplica al final del período pagado.
+        prueba gratuito según el plan elegido, procesado de forma segura por Stripe. Puedes
+        cancelar cuando quieras escribiéndonos a soporte; la cancelación aplica al final del
+        período pagado.
       </p>
       <p>
         <strong>Uso permitido:</strong> la cuenta es personal e intransferible. No está permitido
