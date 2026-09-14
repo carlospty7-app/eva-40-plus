@@ -17,6 +17,14 @@ export function priceIdDelPlan(plan: PlanEva): string {
   return priceId;
 }
 
+/** Price ID del cobro único de $1 por los primeros 7 días de acceso — se cobra de inmediato al
+ * registrarse, antes de que arranque la prueba de 7 días de la suscripción elegida. */
+export function priceIdAcceso7Dias(): string {
+  const priceId = process.env.STRIPE_PRICE_ACCESO_7DIAS;
+  if (!priceId) throw new Error("Falta STRIPE_PRICE_ACCESO_7DIAS en las variables de entorno del servidor.");
+  return priceId;
+}
+
 /** Camino inverso: de un Price ID de Stripe a nuestro plan interno — usado por el webhook para
  * saber qué guardar en `profiles.plan` a partir de la suscripción real que Stripe reporta. */
 export function planDelPriceId(priceId: string | undefined | null): PlanEva {

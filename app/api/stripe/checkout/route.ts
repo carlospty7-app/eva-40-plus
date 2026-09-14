@@ -1,12 +1,14 @@
 import { crearClienteServidor } from "@/lib/supabase/server";
-import { crearClienteStripe, priceIdDelPlan, type PlanEva } from "@/lib/stripe/server";
+import { crearClienteStripe, priceIdAcceso7Dias, priceIdDelPlan, type PlanEva } from "@/lib/stripe/server";
 
 export const runtime = "nodejs";
 
 type CuerpoCheckout = { plan?: string };
 
-/** Crea una sesión de pago de Stripe (7 días gratis, luego cobro automático) para la usuaria
- * autenticada y devuelve la URL a la que hay que redirigirla. */
+/** Crea una sesión de pago de Stripe para la usuaria autenticada y devuelve la URL a la que hay
+ * que redirigirla. Cobra $1 de una vez por los primeros 7 días de acceso (línea de precio único)
+ * y, en paralelo, arranca la suscripción del plan elegido con 7 días de prueba — al día 7, Stripe
+ * cobra sola el plan completo, sin que el $1 cuente para eso. */
 export async function POST(req: Request) {
   const supabase = await crearClienteServidor();
   const {
@@ -46,7 +48,10 @@ export async function POST(req: Request) {
     mode: "subscription",
     customer: customerId,
     client_reference_id: user.id,
-    line_items: [{ price: priceIdDelPlan(plan), quantity: 1 }],
+    line_items: [
+      { price: priceIdAcceso7Dias(), quantity: 1 },
+      { price: priceIdDelPlan(plan), quantity: 1 },
+    ],
     subscription_data: {
       trial_period_days: 7,
       metadata: { user_id: user.id, plan },

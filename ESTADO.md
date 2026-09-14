@@ -1,5 +1,41 @@
 # ESTADO — EVA 40+
-Última actualización: 2026-09-11 (tarde) | Sesión actual: 8 — Sección de Ciclo + ajustes de chat EVA
+Última actualización: 2026-09-13 | Sesión actual: 9 — Modelo de precios cambiado a "$1 por 7 días"
+
+⏸️ CHECKPOINT — 2026-09-13: el usuario decidió cambiar el modelo de precio (estrategia estilo Tony
+Robbins): en vez de "7 días gratis", ahora es **$1 por 7 días de acceso**, y al día 7 se activa
+solo el plan elegido — **Mensual $9.99/mes** (sin cambio) o **Anual $79/año** (antes $71.88/año).
+
+**Cómo se resolvió técnicamente (patrón nativo de Stripe, no hay que inventar nada raro):** el
+checkout de Stripe ahora manda 2 líneas en la misma sesión — el precio único de $1 (`STRIPE_PRICE_ACCESO_7DIAS`)
++ el precio recurrente del plan elegido, con `trial_period_days: 7` en la suscripción. Stripe cobra
+el $1 de inmediato (es un precio de una sola vez, no entra en el conteo de la prueba) y dispara solo
+el cobro completo del plan al día 7. No hace falta tocar el webhook — el ítem de $1 no se agrega a
+`subscription.items`, así que `planDelPriceId`/`current_period_end` siguen leyendo bien el plan real.
+
+**Nuevo: recordatorio 1 día antes del cobro.** El cron diario que ya existía (avisos de racha) ahora
+también revisa `profiles` donde `trial_activo = true` y `fecha_cobro = mañana`, y manda una
+notificación push avisando que al día siguiente se activa el plan — para que a nadie le agarre de
+sorpresa el cargo. `fecha_cobro` durante el trial YA es el `current_period_end` real de Stripe
+(el día exacto del primer cobro), así que no hizo falta ningún cálculo nuevo.
+
+**Ajustes de copy** en `app/paywall/page.tsx` (ya no dice "gratis" en ningún lado, ahora "$1"/"Empieza
+por $1") y `app/legal/terminos/page.tsx` (ya no dice "período de prueba gratuito").
+
+⚠️ **BLOQUEADO — no se pudo probar el flujo de pago real todavía.** Al intentar el primer checkout de
+prueba, Stripe devolvió: *"No such price... a similar object exists in **live mode**, but a **test
+mode** key was used"* — los 3 productos (`STRIPE_PRICE_ACCESO_7DIAS`, `STRIPE_PRICE_ANUAL`,
+`STRIPE_PRICE_MENSUAL`) se crearon con el interruptor de Stripe en modo **Live**, pero estamos
+probando con una clave `sk_test_...`. Se le explicó al usuario que debe activar "Test mode" en su
+panel de Stripe, volver a crear los mismos 3 productos ahí, y pasarme los 3 `price_...` de prueba
+nuevos. **Siguiente acción exacta: esperar esos 3 IDs de modo prueba del usuario**, repetir la
+prueba de checkout con una tarjeta de prueba de Stripe (4242 4242 4242 4242), confirmar que el
+webhook activa la cuenta, y solo después cambiar a las claves reales (`sk_live_`) para el
+lanzamiento de verdad — nunca probar con dinero real primero.
+
+🔍 Verificado hasta ahora: `tsc` ✓ `build` ✓ · el endpoint de checkout SÍ crea la sesión de Stripe
+de verdad (confirma que la lógica de autenticación, creación de customer y armado de line_items
+funciona) — el único bloqueo es el mismatch live/test de los Price ID, no un bug de código. No
+subido a git todavía en el momento de este checkpoint (queda como siguiente paso inmediato).
 
 ⏸️ CHECKPOINT — 2026-09-11 (tarde): a pedido del usuario y Maru (revisando la app juntos), se
 construyó una **sección propia de Ciclo** (`/app/ciclo`, reemplaza la tarjeta que vivía escondida en
