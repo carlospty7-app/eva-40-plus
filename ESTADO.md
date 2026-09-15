@@ -1,5 +1,48 @@
 # ESTADO — EVA 40+
-Última actualización: 2026-09-14 | Sesión actual: 9 — Stripe probado de punta a punta (modo prueba)
+Última actualización: 2026-09-15 | Sesión actual: 10 — Dominio propio + Resend + bug real de recuperación de contraseña corregido
+
+⏸️ CHECKPOINT — 2026-09-15: sesión grande de infraestructura, **todo ya en producción y probado real**
+(no en `desarrollo` — esto no tocaba features nuevas, era infraestructura pura, de bajo riesgo).
+
+**1. Dominio propio comprado y conectado:** el usuario compró `eva40.app` en Namecheap.
+- Conectado a Vercel (registro A `@` → `216.198.79.1` en Namecheap) → **"Valid Configuration"**, SSL
+  generado solo. `https://eva40.app` ya sirve la app real de producción.
+- `Site URL` de Supabase actualizado a `https://eva40.app` + agregado `https://eva40.app/**` a
+  Redirect URLs (sin borrar las anteriores de Vercel/localhost).
+
+**2. Correo propio con Resend (resuelve el límite de Supabase que nos dio problemas TODA la sesión):**
+- Cuenta creada, dominio `eva40.app` verificado (4 registros DNS: DKIM TXT, 2 CNAME de SPF, DMARC TXT
+  — todos agregados en Namecheap, verificados en ~10 min).
+- API key creada → conectada en Supabase (**Authentication → Emails → SMTP Settings**): host
+  `smtp.resend.com`, puerto 465, usuario `resend`, remitente `hola@eva40.app`.
+- **Ya NO depende del mailer gratuito y limitado de Supabase.**
+
+**3. 🐛 BUG REAL encontrado y corregido: el link de recuperación de contraseña nunca funcionaba
+en producción** — ni siquiera con Resend ya andando. Causa real (no falta de paciencia del usuario,
+confirmado con la URL exacta que mandó: `error=access_denied&error_code=otp_expired`): **Gmail (y
+otros correos) visitan los links por seguridad automáticamente ANTES de que la usuaria los abra** —
+como eran de un solo uso, ese escaneo automático los gastaba antes de tiempo.
+
+Solución aplicada (es el workaround oficial documentado por Supabase para este problema exacto):
+- La plantilla de correo "Reset Password" en Supabase ya NO usa `{{ .ConfirmationURL }}` (que
+  apunta al endpoint de Supabase que se auto-canjea con un GET) — ahora usa un link directo a
+  nuestra propia página: `{{ .SiteURL }}/login/actualizar-contrasena?token_hash={{ .TokenHash }}&type=recovery`.
+- `app/login/actualizar-contrasena/page.tsx`: ya NO canjea el token con solo cargar la página —
+  ahora espera a que la usuaria apriete "Guardar contraseña" (una acción real) y ahí recién llama
+  `supabase.auth.verifyOtp({ token_hash, type: "recovery" })` antes de `updateUser`. Así, si un bot
+  de correo visita el link antes, no pasa nada (solo carga la página, no canjea nada) — el token
+  sigue vivo para cuando la usuaria de verdad haga clic en el botón.
+- Este fix se subió DIRECTO a `main`/producción (cherry-pick puntual desde `desarrollo`) porque era
+  un bug bloqueante que el usuario necesitaba resuelto YA — el resto de `desarrollo` (Stripe, Ciclo,
+  precios nuevos) sigue esperando aprobación aparte, no se llevó nada de eso de arrastre.
+
+🔍 Verificado de punta a punta en PRODUCCIÓN real (`eva40.app`): generé un link de recuperación real
+vía la API admin de Supabase (mismo formato que ahora manda el correo real), lo abrí sin que se
+gastara solo, escribí la contraseña nueva, y confirmé **"Contraseña actualizada"**. Cuenta de
+prueba borrada al terminar. `tsc` ✓ `build` ✓ en `main` antes de subir.
+
+Siguiente paso: el usuario sigue con Stripe en modo Live (ver checkpoint anterior, sigue pendiente:
+crear los 3 productos en modo Live + pasar `sk_live_...` + webhook real en producción).
 
 ⏸️ CHECKPOINT — 2026-09-14: **el flujo de pago de Stripe quedó verificado de verdad, no solo en
 código.** El usuario creó los 3 productos también en modo "Test" (los primeros los había creado en
