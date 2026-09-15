@@ -1,15 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, CircleAlert, CircleCheck } from "lucide-react";
 import { TapButton } from "@/components/app/onboarding/TapButton";
 import { Logo } from "@/components/app/ui/Logo";
 import { crearClienteNavegador } from "@/lib/supabase/client";
 
-/** Página donde cae el link de "¿Olvidaste tu contraseña?" — Supabase ya arma una sesión temporal
- * de recuperación a partir del link (el cliente la detecta solo desde la URL), así que solo hace
- * falta pedir la contraseña nueva y guardarla. */
+/** Página donde cae el link de "¿Olvidaste tu contraseña?". A propósito NO canjea el link solo con
+ * cargar la página — Gmail y otros correos "escanean" los links por seguridad ANTES de que la
+ * usuaria los abra, y como son de un solo uso, ese escaneo automático los gastaba antes de que ella
+ * pudiera usarlos. Por eso el link ahora trae `token_hash` en la URL (no lo canjea Supabase solo)
+ * y recién se canjea cuando la usuaria aprieta "Guardar contraseña" — una acción real, no un simple
+ * GET que un bot pueda disparar. */
 export default function ActualizarContrasenaPage() {
   const router = useRouter();
   const [password, setPassword] = useState("");
@@ -17,6 +20,14 @@ export default function ActualizarContrasenaPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [listo, setListo] = useState(false);
+  const [linkInvalido, setLinkInvalido] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("error") || (!params.get("token_hash") && !window.location.hash.includes("access_token"))) {
+      setLinkInvalido(true);
+    }
+  }, []);
 
   async function guardar() {
     if (password.length < 6) {
@@ -30,6 +41,21 @@ export default function ActualizarContrasenaPage() {
     setError(null);
     setLoading(true);
     const supabase = crearClienteNavegador();
+
+    const params = new URLSearchParams(window.location.search);
+    const tokenHash = params.get("token_hash");
+
+    // Si el link trae token_hash (formato nuevo, a prueba de escaneo de correo), lo canjeamos
+    // recién ahora — es el primer momento en que hay una acción real de la usuaria de por medio.
+    if (tokenHash) {
+      const { error: errVerify } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "recovery" });
+      if (errVerify) {
+        setLoading(false);
+        setError("El link ya venció o no es válido — pide uno nuevo desde la pantalla de entrar.");
+        return;
+      }
+    }
+
     const { error: errUpdate } = await supabase.auth.updateUser({ password });
     setLoading(false);
     if (errUpdate) {
@@ -37,6 +63,24 @@ export default function ActualizarContrasenaPage() {
       return;
     }
     setListo(true);
+  }
+
+  if (linkInvalido) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">
+        <CircleAlert className="h-8 w-8 text-status-error" />
+        <h1 className="mt-4 font-display text-[20px] font-medium text-txt-primary">
+          Este link ya no sirve
+        </h1>
+        <p className="mt-2 max-w-[280px] text-[13.5px] text-txt-secondary">
+          Puede que tu correo lo haya abierto automáticamente por seguridad antes que tú. Pide uno
+          nuevo desde la pantalla de entrar.
+        </p>
+        <div className="mt-5 w-full max-w-[220px]">
+          <TapButton onClick={() => router.push("/login")}>Volver a iniciar sesión</TapButton>
+        </div>
+      </div>
+    );
   }
 
   if (listo) {
