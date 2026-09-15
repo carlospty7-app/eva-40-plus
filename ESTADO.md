@@ -1,5 +1,63 @@
 # ESTADO — EVA 40+
-Última actualización: 2026-09-15 | Sesión actual: 10 — Dominio propio + Resend + bug real de recuperación de contraseña corregido
+Última actualización: 2026-09-15 (tarde) | Sesión actual: 10 — Stripe Live activo en producción + sistema de correos del negocio
+
+⏸️ CHECKPOINT — 2026-09-15 (tarde): dos cosas grandes esta sesión.
+
+**1. Stripe en modo Live, activo en producción de verdad.** Se fusionó TODO lo que estaba en
+`desarrollo` (Retos EVA sync, Stripe checkout+webhook, sección de Ciclo, precio "$1 por 7 días") a
+`main` — ya está en `eva40.app`. Las 4 claves de Stripe (Secret Key `rk_live_...` — es una clave
+**restringida**, no la Secret Key completa, y funcionó bien; los 3 Price ID reales) están cargadas
+en Vercel (solo en Production, a propósito, para que las pruebas en `desarrollo` nunca cobren de
+verdad). El webhook real (`EVA40-produccion` → `https://eva40.app/api/stripe/webhook`) está creado
+en Stripe, con su `STRIPE_WEBHOOK_SECRET` real también cargado. Checkout probado de verdad en modo
+Live (sesiones `cs_live_...` creadas para plan mensual y anual) — **falta el pago real completo de
+punta a punta** (el usuario decidió no gastar el $1 de prueba todavía, ver Pendiente abajo).
+
+**2. Sistema de correos del negocio (a pedido explícito, usando PROMPT-EMAILS.txt) — recién
+construido, con evidencia parcial:**
+- Nueva infraestructura: `lib/email/resend.ts` (cliente Resend para uso DESDE NUESTRO CÓDIGO —
+  antes Resend solo estaba conectado a Supabase Auth para sus 2 correos automáticos) +
+  `lib/email/plantillas.ts` (6 plantillas, voz derivada de FICHA-AVATAR.md: kinestésica, sin
+  "dieta"/calorías/jerga médica, un solo CTA por correo).
+- Conectados a eventos reales de Stripe en `app/api/stripe/webhook/route.ts`:
+  - `checkout.session.completed` → correo de bienvenida/confirmación de pago (ya probado con un
+    envío real a carlospty7@gmail.com, aceptado por Resend sin error — **falta que el usuario
+    confirme que llegó a la bandeja principal, no a spam, y cómo se ve en el celular**).
+  - `customer.subscription.deleted` → correo de cancelación.
+  - `customer.subscription.updated` (solo en la TRANSICIÓN real a `past_due`, no en cada
+    actualización menor — se revisa `previous_attributes` para no mandar el mismo aviso repetido)
+    → correo de pago fallido (dunning).
+  - `charge.refunded` → correo de reembolso.
+  - `checkout.session.expired` → correo de carrito abandonado.
+  - ⚠️ **Estos últimos 2 eventos (`charge.refunded`, `checkout.session.expired`) NO están
+    agregados todavía en la configuración del webhook en el panel de Stripe** — solo se registraron
+    los 3 originales (`checkout.session.completed`, `customer.subscription.updated/deleted`). Hay
+    que agregarlos ahí para que esos 2 correos lleguen a funcionar de verdad.
+- Correo de activación (Día 1 sin ninguna revisión) agregado al cron diario que ya existía
+  (`app/api/cron/recordatorios/route.ts`) — se manda una sola vez, el día después del registro.
+- **Nutrición del diagnóstico gratis (lead magnet) — NO implementada**: requiere capturar el
+  correo ANTES del pago (hoy el diagnóstico vive solo en el navegador, sin correo, hasta que se
+  registra) — es un cambio de producto, no solo de copy, queda pendiente de que el usuario lo pida.
+- Se agregaron 2 variables nuevas: `RESEND_API_KEY` y `RESEND_FROM` — **solo en `.env.local` por
+  ahora, faltan en Vercel** para que funcionen en producción real.
+
+🔍 Verificado: `tsc` ✓ `build` ✓ · un envío real de prueba (bienvenida) aceptado por Resend sin
+error — pendiente que el usuario confirme visualmente que llegó bien. El resto de las plantillas
+(cancelación, reembolso, pago fallido, carrito abandonado, activación D1) NO se han enviado de
+prueba individualmente todavía — quedan verificadas solo por lectura de código + build limpio.
+
+⚠️ Pendiente, en orden:
+1. Confirmación del usuario de que el correo de prueba llegó bien (bandeja principal, se ve bien
+   en celular).
+2. Agregar `RESEND_API_KEY` y `RESEND_FROM` a Vercel (Production) — sin esto, ningún correo de la
+   app (solo los de Supabase) funciona en el sitio real.
+3. Agregar los eventos `charge.refunded` y `checkout.session.expired` al webhook de Stripe en el
+   panel (hoy solo escucha 3 de los 5 eventos que el código ya maneja).
+4. Redeploy en Vercel después de agregar las variables.
+5. El usuario todavía no ha decidido si hace un pago real de $1 de prueba para confirmar el
+   webhook de pago en producción de punta a punta (se ofreció, no se ha hecho).
+6. Commit + push de `lib/email/` y los 2 archivos modificados — **todavía sin subir a git** al
+   momento de este checkpoint.
 
 ⏸️ CHECKPOINT — 2026-09-15: sesión grande de infraestructura, **todo ya en producción y probado real**
 (no en `desarrollo` — esto no tocaba features nuevas, era infraestructura pura, de bajo riesgo).
