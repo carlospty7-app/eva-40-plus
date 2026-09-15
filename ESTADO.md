@@ -1,5 +1,40 @@
 # ESTADO — EVA 40+
-Última actualización: 2026-09-13 | Sesión actual: 9 — Modelo de precios cambiado a "$1 por 7 días"
+Última actualización: 2026-09-14 | Sesión actual: 9 — Stripe probado de punta a punta (modo prueba)
+
+⏸️ CHECKPOINT — 2026-09-14: **el flujo de pago de Stripe quedó verificado de verdad, no solo en
+código.** El usuario creó los 3 productos también en modo "Test" (los primeros los había creado en
+modo Live por error — ver checkpoint anterior). Instalé el CLI oficial de Stripe (`stripe listen`)
+para poder recibir el webhook en mi máquina local sin necesitar la app desplegada.
+
+**Prueba real hecha (dos veces, planes anual y mensual, tarjeta de prueba 4242 4242 4242 4242):**
+1. Login → checkout real → Stripe cobró $1.04 PAB (~$1 USD) y mostró correctamente "Luego 82,16 PAB
+   por año" (anual) y "Luego 10,39 PAB al mes" (mensual) — confirma que el precio único de $1 y el
+   precio recurrente del plan viajan juntos como se diseñó.
+2. Pago aprobado → redirigió a `/app?checkout=success`.
+3. El webhook recibió TODOS los eventos de Stripe (`checkout.session.completed`,
+   `customer.subscription.created`, `invoice.paid`, etc.) y respondió 200 en cada uno.
+4. Se confirmó en la base de datos real: `profiles.plan`, `activo`, `trial_activo`, `fecha_cobro` y
+   `stripe_subscription_id` quedaron con datos REALES de Stripe, no con los valores por defecto.
+5. Cuenta y datos de prueba borrados al terminar (cuenta de auth + filas de checkins/ciclo/medidas).
+
+🔍 Verificado: `tsc` ✓ `build` ✓ · pago real de prueba de punta a punta (2 veces) ✓ · webhook firmado
+y respondiendo 200 ✓ · base de datos actualizándose sola ✓. **Esta es la primera vez que el dinero
+(aunque sea de prueba) se mueve de verdad por el sistema — el gate de "DINERO" del checklist de
+cierre queda satisfecho para el flujo de cobro inicial** (falta todavía: dunning/pagos fallidos,
+portal de cancelación propio — ver checkpoint anterior).
+
+⚠️ Pendiente para pasar a producción de verdad:
+1. El usuario debe crear los MISMOS 3 productos en modo **Live** (ya existían de un intento anterior
+   por error — reusar esos o limpiar y crear de nuevo, su decisión) y darme esos 3 `price_...` de
+   modo Live + su `sk_live_...`.
+2. Cargar esas 4 variables (+ las que ya existían) en Vercel → Environment Variables.
+3. Crear el webhook DE VERDAD en el panel de Stripe (Developers → Webhooks) apuntando a
+   `https://<dominio-real>/api/stripe/webhook` una vez desplegado, y pasar el Signing Secret real
+   (el `whsec_...` que usamos hoy fue solo para pruebas locales, no sirve en producción).
+4. Hacer UN pago real pequeño de verdad (no de prueba) antes de anunciar el lanzamiento, para
+   confirmar que también funciona con dinero real y no solo en el entorno de prueba de Stripe.
+5. El Stripe CLI quedó instalado en esta máquina (`winget install Stripe.StripeCli`) por si hace
+   falta volver a probar localmente — no quedó ninguna sesión de `stripe listen` corriendo.
 
 ⏸️ CHECKPOINT — 2026-09-13: el usuario decidió cambiar el modelo de precio (estrategia estilo Tony
 Robbins): en vez de "7 días gratis", ahora es **$1 por 7 días de acceso**, y al día 7 se activa
