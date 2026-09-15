@@ -46,18 +46,24 @@ error — pendiente que el usuario confirme visualmente que llegó bien. El rest
 (cancelación, reembolso, pago fallido, carrito abandonado, activación D1) NO se han enviado de
 prueba individualmente todavía — quedan verificadas solo por lectura de código + build limpio.
 
-⚠️ Pendiente, en orden:
-1. Confirmación del usuario de que el correo de prueba llegó bien (bandeja principal, se ve bien
-   en celular).
-2. Agregar `RESEND_API_KEY` y `RESEND_FROM` a Vercel (Production) — sin esto, ningún correo de la
-   app (solo los de Supabase) funciona en el sitio real.
-3. Agregar los eventos `charge.refunded` y `checkout.session.expired` al webhook de Stripe en el
-   panel (hoy solo escucha 3 de los 5 eventos que el código ya maneja).
-4. Redeploy en Vercel después de agregar las variables.
-5. El usuario todavía no ha decidido si hace un pago real de $1 de prueba para confirmar el
-   webhook de pago en producción de punta a punta (se ofreció, no se ha hecho).
-6. Commit + push de `lib/email/` y los 2 archivos modificados — **todavía sin subir a git** al
-   momento de este checkpoint.
+✅ Resuelto en el resto de esta misma sesión (los 6 pendientes de arriba):
+1. Usuario confirmó: el correo de bienvenida llegó bien a la bandeja principal, se ve bien en
+   celular. Se le agregó el logo real (`https://eva40.app/brand/logo-horizontal.png`) tras pedirlo
+   — probado con un segundo envío real, confirmado visualmente.
+2. `RESEND_API_KEY` y `RESEND_FROM` agregadas en Vercel (Production).
+3. Los 5 eventos (`charge.refunded`, `checkout.session.completed`, `checkout.session.expired`,
+   `customer.subscription.deleted`, `customer.subscription.updated`) confirmados marcados en el
+   webhook de Stripe — coincide exactamente con lo que el código maneja.
+4. Redeploy hecho en Vercel.
+5. Commit + push de `lib/email/` a `main` y `desarrollo` (ambas ramas sincronizadas) — commit
+   `3042137`.
+
+⚠️ Único pendiente real que queda de todo lo de Stripe/correos de esta sesión:
+- El usuario todavía no ha hecho un pago real de $1 de prueba para confirmar el webhook de pago
+  EN PRODUCCIÓN de punta a punta con dinero real (se ofreció, no se ha hecho — no es obligatorio,
+  el checkout ya se probó creando sesiones reales, solo falta el ciclo completo con un cobro real).
+- Nutrición del diagnóstico gratis (lead magnet, punto E del plan de correos) sigue sin construir
+  — requiere capturar el correo antes del pago, es cambio de producto, no solo de copy.
 
 ⏸️ CHECKPOINT — 2026-09-15: sesión grande de infraestructura, **todo ya en producción y probado real**
 (no en `desarrollo` — esto no tocaba features nuevas, era infraestructura pura, de bajo riesgo).
