@@ -136,9 +136,11 @@ export default function EvaPage() {
           </span>
           <div>
             <h1 className="font-display text-[20px] font-medium leading-[1.2] text-txt-primary">
-              ¿Qué necesitas ahora?
+              Háblame como le hablarías a Maru
             </h1>
-            <p className="text-[12.5px] text-txt-secondary">Cuéntame qué sientes y te ayudo.</p>
+            <p className="text-[12.5px] text-txt-secondary">
+              Pregúntame lo que sea sobre tu alimentación, tus síntomas o cómo te sientes hoy.
+            </p>
           </div>
         </div>
 
@@ -198,7 +200,7 @@ export default function EvaPage() {
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Escribe tu pregunta..."
+                  placeholder="Escribe lo que quieras..."
                   disabled={enviando}
                   maxLength={800}
                   className="h-11 flex-1 rounded-full border border-border-default/60 bg-surface-primary px-4 text-[13.5px] text-txt-primary outline-none focus:border-brand-primary/50 disabled:opacity-60"
@@ -261,7 +263,10 @@ export default function EvaPage() {
                 className="flex h-14 w-full items-center gap-3 rounded-xl border border-dashed border-border-strong px-4 text-left text-txt-secondary"
               >
                 <HelpCircle className="h-4 w-4 shrink-0" />
-                <span className="text-[14px] font-medium">Es otra cosa</span>
+                <div>
+                  <span className="block text-[14px] font-medium text-txt-primary">Escríbeme lo que quieras</span>
+                  <span className="block text-[11.5px] text-txt-tertiary">Como un chat — pregunta cualquier cosa, sin opciones fijas</span>
+                </div>
               </motion.button>
             </motion.div>
           ) : (

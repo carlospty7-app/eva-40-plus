@@ -13,9 +13,8 @@ export default function ReembolsoPage() {
         devolvemos el 100% de lo pagado — sin preguntas, sin formularios.
       </p>
       <p>
-        El reembolso se procesa a través de Hotmart, nuestra plataforma de venta, dentro de su
-        política estándar de 7 días, y puede tardar unos días hábiles en reflejarse según tu
-        método de pago.
+        El reembolso se procesa a través de Stripe, nuestra plataforma de pago, y puede tardar
+        unos días hábiles en reflejarse según tu método de pago.
       </p>
       <p>
         Pasados los 7 días, puedes cancelar tu suscripción en cualquier momento para que no se

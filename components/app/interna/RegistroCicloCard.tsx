@@ -14,22 +14,30 @@ const INTENSIDADES: { valor: 1 | 2 | 3; label: string }[] = [
   { valor: 3, label: "Abundante" },
 ];
 
-/** Registro libre del ciclo — a propósito NO es un calendario ni pide predecir nada, porque a los
- * 40+ la irregularidad por perimenopausia es normal. Solo pregunta qué nota HOY. Opcional siempre:
- * vive colapsado hasta que la usuaria decide abrirlo. */
+/** Registro libre del ciclo — a propósito NO asume ni predice nada, porque a los 40+ la
+ * irregularidad por perimenopausia es normal. Solo pregunta qué se notó ESE día (hoy por defecto,
+ * o cualquier día pasado que se le pase por `fecha`, para poder usarse desde un calendario).
+ * Opcional siempre: vive colapsado hasta que la usuaria decide abrirlo. */
 export function RegistroCicloCard({
   userId,
-  registroHoy,
+  fecha,
+  esHoy = true,
+  registroDelDia,
   onGuardado,
+  onCancelar,
 }: {
   userId: string;
-  registroHoy: RegistroCiclo | null;
+  fecha?: string;
+  esHoy?: boolean;
+  registroDelDia: RegistroCiclo | null;
   onGuardado: () => void;
+  onCancelar?: () => void;
 }) {
-  const [abierto, setAbierto] = useState(false);
-  const [sangrado, setSangrado] = useState(registroHoy?.sangrado ?? false);
-  const [intensidad, setIntensidad] = useState<1 | 2 | 3>(registroHoy?.intensidad ?? 2);
-  const [sintomas, setSintomas] = useState<SintomaCicloId[]>(registroHoy?.sintomas ?? []);
+  const fechaObjetivo = fecha ?? isoFecha(new Date());
+  const [abierto, setAbierto] = useState(!esHoy);
+  const [sangrado, setSangrado] = useState(registroDelDia?.sangrado ?? false);
+  const [intensidad, setIntensidad] = useState<1 | 2 | 3>(registroDelDia?.intensidad ?? 2);
+  const [sintomas, setSintomas] = useState<SintomaCicloId[]>(registroDelDia?.sintomas ?? []);
   const [guardando, setGuardando] = useState(false);
 
   function alternarSintoma(id: SintomaCicloId) {
@@ -39,7 +47,7 @@ export function RegistroCicloCard({
   async function guardar() {
     setGuardando(true);
     const supabase = crearClienteNavegador();
-    await registrarCiclo(supabase, userId, isoFecha(new Date()), {
+    await registrarCiclo(supabase, userId, fechaObjetivo, {
       sangrado,
       intensidad: sangrado ? intensidad : undefined,
       sintomas,
@@ -49,7 +57,7 @@ export function RegistroCicloCard({
     onGuardado();
   }
 
-  if (!abierto) {
+  if (!abierto && esHoy) {
     return (
       <button
         type="button"
@@ -62,13 +70,13 @@ export function RegistroCicloCard({
           </span>
           <div>
             <p className="text-[13px] font-medium text-txt-primary">
-              {registroHoy ? "Ya registraste tu ciclo hoy" : "Registra tu ciclo (opcional)"}
+              {registroDelDia ? "Ya registraste tu ciclo hoy" : "Registra tu ciclo (opcional)"}
             </p>
             <p className="text-[11.5px] text-txt-tertiary">Sin calendario, sin predicciones — solo lo que notas hoy.</p>
           </div>
         </div>
         <span className="shrink-0 text-[12px] font-semibold text-brand-primary">
-          {registroHoy ? "Editar" : "Registrar"}
+          {registroDelDia ? "Editar" : "Registrar"}
         </span>
       </button>
     );
@@ -76,7 +84,9 @@ export function RegistroCicloCard({
 
   return (
     <div className="mt-4 rounded-xl border border-border-default/60 bg-surface-primary p-4 shadow-sm">
-      <p className="text-[13px] font-semibold text-txt-primary">¿Cómo está tu ciclo hoy?</p>
+      <p className="text-[13px] font-semibold text-txt-primary">
+        {esHoy ? "¿Cómo está tu ciclo hoy?" : "¿Qué notaste ese día?"}
+      </p>
 
       <button
         type="button"
@@ -86,7 +96,7 @@ export function RegistroCicloCard({
         }`}
       >
         <Droplet className="h-4 w-4" />
-        {sangrado ? "Hoy tienes sangrado" : "¿Hoy tienes sangrado?"}
+        {sangrado ? (esHoy ? "Hoy tienes sangrado" : "Ese día tuviste sangrado") : esHoy ? "¿Hoy tienes sangrado?" : "¿Ese día tuviste sangrado?"}
       </button>
 
       {sangrado && (
@@ -129,7 +139,7 @@ export function RegistroCicloCard({
       <div className="mt-4 flex gap-2">
         <button
           type="button"
-          onClick={() => setAbierto(false)}
+          onClick={() => (onCancelar ? onCancelar() : setAbierto(false))}
           className="h-10 flex-1 rounded-full border border-border-strong text-[13px] font-medium text-txt-secondary"
         >
           Cancelar

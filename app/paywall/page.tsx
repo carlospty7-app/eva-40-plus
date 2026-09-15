@@ -83,10 +83,10 @@ export default function PaywallPage() {
   function irALogin() {
     if (isPending) return;
     setIsPending(true);
-    router.push("/login");
+    router.push(`/login?plan=${plan}`);
   }
 
-  const precio = plan === "anual" ? "$5.99/mes" : "$9.99/mes";
+  const precio = plan === "anual" ? "$79/año" : "$9.99/mes";
 
   return (
     <div className="relative flex min-h-dvh flex-col overflow-hidden bg-surface-base px-4 pb-28 pt-4">
@@ -182,15 +182,15 @@ export default function PaywallPage() {
           }`}
         >
           <span className="absolute -top-2.5 left-4 rounded-full bg-brand-gold px-2.5 py-0.5 text-[10px] font-bold text-surface-dark-2">
-            MÁS POPULAR · AHORRA 40%
+            MÁS POPULAR · AHORRA 34%
           </span>
           <div className="flex items-center justify-between">
             <span className="text-[14px] font-semibold text-txt-primary">Anual</span>
             <span className="font-display text-[20px] font-medium text-txt-primary">
-              $5.99<span className="text-[12px] text-txt-tertiary">/mes</span>
+              $79<span className="text-[12px] text-txt-tertiary">/año</span>
             </span>
           </div>
-          <p className="mt-1 text-[11.5px] text-txt-tertiary">Se cobra $71.88/año</p>
+          <p className="mt-1 text-[11.5px] text-txt-tertiary">Equivale a $6.58/mes</p>
         </motion.button>
 
         <motion.button
@@ -216,7 +216,7 @@ export default function PaywallPage() {
       </div>
 
       <p className="relative mt-6 text-center text-[12.5px] text-txt-secondary">
-        Menos de <span className="font-semibold text-txt-primary">$0.20 al día</span> — probablemente
+        Empieza por <span className="font-semibold text-txt-primary">$1</span> — probablemente
         menos de lo que ya gastaste en suplementos o retos que no calzaban contigo.
       </p>
 
@@ -227,7 +227,7 @@ export default function PaywallPage() {
         className="relative mt-6 rounded-xl bg-surface-tertiary/60 p-4"
       >
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-txt-tertiary">
-          Así funciona tu prueba de 7 días
+          Así funciona tu acceso de 7 días
         </p>
         <div className="space-y-3">
           <div className="flex items-center gap-3">
@@ -236,7 +236,7 @@ export default function PaywallPage() {
             </span>
             <div>
               <p className="text-[13px] font-semibold text-txt-primary">Hoy</p>
-              <p className="text-[12px] text-txt-tertiary">Empiezas tu ruta gratis, sin cobro</p>
+              <p className="text-[12px] text-txt-tertiary">Pagas $1 y entras de una vez a tu ruta</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -244,9 +244,9 @@ export default function PaywallPage() {
               <BellRing className="h-4 w-4" />
             </span>
             <div>
-              <p className="text-[13px] font-semibold text-txt-primary">Día 5 ({fechaEnDias(5)})</p>
+              <p className="text-[13px] font-semibold text-txt-primary">Día 6 ({fechaEnDias(6)})</p>
               <p className="text-[12px] text-txt-tertiary">
-                Te avisamos por correo — todavía puedes cancelar sin que se te cobre nada
+                Te avisamos que mañana se activa tu plan — todavía puedes cancelar antes
               </p>
             </div>
           </div>
@@ -257,7 +257,7 @@ export default function PaywallPage() {
             <div>
               <p className="text-[13px] font-semibold text-txt-primary">Día 7 ({fechaEnDias(7)})</p>
               <p className="text-[12px] text-txt-tertiary">
-                Se hace el primer cobro y se activa tu plan, solo si no cancelaste antes
+                Se activa tu plan ({precio}), solo si no cancelaste antes
               </p>
             </div>
           </div>
@@ -266,10 +266,10 @@ export default function PaywallPage() {
 
       <div ref={ctaPrincipalRef} className="relative mt-6">
         <TapButton onClick={irALogin} disabled={isPending}>
-          {isPending ? "Un momento…" : "Activar 7 días gratis"}
+          {isPending ? "Un momento…" : "Empezar por $1"}
         </TapButton>
         <p className="mt-3 text-center text-[12px] text-txt-tertiary">
-          Cancela cuando quieras, sin llamadas · Sin cargo hasta el {fechaEnDias(7)}
+          Cancela cuando quieras, sin llamadas · Tu plan se activa el {fechaEnDias(7)}
         </p>
       </div>
 
@@ -284,7 +284,7 @@ export default function PaywallPage() {
 
       <div className="relative mt-4 flex items-center justify-center gap-2 text-[11.5px] text-txt-tertiary">
         <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-        <span>Garantía 7 días · Pago seguro · Hotmart</span>
+        <span>Garantía 7 días · Pago seguro · Stripe</span>
       </div>
       </div>
 
@@ -298,7 +298,7 @@ export default function PaywallPage() {
         <div className="mx-auto flex max-w-[420px] items-center gap-3">
           <div className="shrink-0">
             <p className="font-display text-[16px] leading-none text-txt-primary">{precio}</p>
-            <p className="text-[10.5px] text-txt-tertiary">7 días gratis</p>
+            <p className="text-[10.5px] text-txt-tertiary">Empieza por $1</p>
           </div>
           <button
             type="button"
@@ -306,7 +306,7 @@ export default function PaywallPage() {
             disabled={isPending}
             className="h-[52px] flex-1 rounded-full bg-brand-primary text-[15px] font-semibold text-txt-inverse transition-transform active:scale-[0.98] disabled:opacity-60"
           >
-            {isPending ? "Un momento…" : "Activar 7 días gratis"}
+            {isPending ? "Un momento…" : "Empezar por $1"}
           </button>
         </div>
       </motion.div>

@@ -1,5 +1,231 @@
 # ESTADO — EVA 40+
-Última actualización: 2026-08-17 | Sesión actual: 7 — Retos EVA (Fase 1) construido y verificado
+Última actualización: 2026-09-15 | Sesión actual: 10 — Dominio propio + Resend + bug real de recuperación de contraseña corregido
+
+⏸️ CHECKPOINT — 2026-09-15: sesión grande de infraestructura, **todo ya en producción y probado real**
+(no en `desarrollo` — esto no tocaba features nuevas, era infraestructura pura, de bajo riesgo).
+
+**1. Dominio propio comprado y conectado:** el usuario compró `eva40.app` en Namecheap.
+- Conectado a Vercel (registro A `@` → `216.198.79.1` en Namecheap) → **"Valid Configuration"**, SSL
+  generado solo. `https://eva40.app` ya sirve la app real de producción.
+- `Site URL` de Supabase actualizado a `https://eva40.app` + agregado `https://eva40.app/**` a
+  Redirect URLs (sin borrar las anteriores de Vercel/localhost).
+
+**2. Correo propio con Resend (resuelve el límite de Supabase que nos dio problemas TODA la sesión):**
+- Cuenta creada, dominio `eva40.app` verificado (4 registros DNS: DKIM TXT, 2 CNAME de SPF, DMARC TXT
+  — todos agregados en Namecheap, verificados en ~10 min).
+- API key creada → conectada en Supabase (**Authentication → Emails → SMTP Settings**): host
+  `smtp.resend.com`, puerto 465, usuario `resend`, remitente `hola@eva40.app`.
+- **Ya NO depende del mailer gratuito y limitado de Supabase.**
+
+**3. 🐛 BUG REAL encontrado y corregido: el link de recuperación de contraseña nunca funcionaba
+en producción** — ni siquiera con Resend ya andando. Causa real (no falta de paciencia del usuario,
+confirmado con la URL exacta que mandó: `error=access_denied&error_code=otp_expired`): **Gmail (y
+otros correos) visitan los links por seguridad automáticamente ANTES de que la usuaria los abra** —
+como eran de un solo uso, ese escaneo automático los gastaba antes de tiempo.
+
+Solución aplicada (es el workaround oficial documentado por Supabase para este problema exacto):
+- La plantilla de correo "Reset Password" en Supabase ya NO usa `{{ .ConfirmationURL }}` (que
+  apunta al endpoint de Supabase que se auto-canjea con un GET) — ahora usa un link directo a
+  nuestra propia página: `{{ .SiteURL }}/login/actualizar-contrasena?token_hash={{ .TokenHash }}&type=recovery`.
+- `app/login/actualizar-contrasena/page.tsx`: ya NO canjea el token con solo cargar la página —
+  ahora espera a que la usuaria apriete "Guardar contraseña" (una acción real) y ahí recién llama
+  `supabase.auth.verifyOtp({ token_hash, type: "recovery" })` antes de `updateUser`. Así, si un bot
+  de correo visita el link antes, no pasa nada (solo carga la página, no canjea nada) — el token
+  sigue vivo para cuando la usuaria de verdad haga clic en el botón.
+- Este fix se subió DIRECTO a `main`/producción (cherry-pick puntual desde `desarrollo`) porque era
+  un bug bloqueante que el usuario necesitaba resuelto YA — el resto de `desarrollo` (Stripe, Ciclo,
+  precios nuevos) sigue esperando aprobación aparte, no se llevó nada de eso de arrastre.
+
+🔍 Verificado de punta a punta en PRODUCCIÓN real (`eva40.app`): generé un link de recuperación real
+vía la API admin de Supabase (mismo formato que ahora manda el correo real), lo abrí sin que se
+gastara solo, escribí la contraseña nueva, y confirmé **"Contraseña actualizada"**. Cuenta de
+prueba borrada al terminar. `tsc` ✓ `build` ✓ en `main` antes de subir.
+
+Siguiente paso: el usuario sigue con Stripe en modo Live (ver checkpoint anterior, sigue pendiente:
+crear los 3 productos en modo Live + pasar `sk_live_...` + webhook real en producción).
+
+⏸️ CHECKPOINT — 2026-09-14: **el flujo de pago de Stripe quedó verificado de verdad, no solo en
+código.** El usuario creó los 3 productos también en modo "Test" (los primeros los había creado en
+modo Live por error — ver checkpoint anterior). Instalé el CLI oficial de Stripe (`stripe listen`)
+para poder recibir el webhook en mi máquina local sin necesitar la app desplegada.
+
+**Prueba real hecha (dos veces, planes anual y mensual, tarjeta de prueba 4242 4242 4242 4242):**
+1. Login → checkout real → Stripe cobró $1.04 PAB (~$1 USD) y mostró correctamente "Luego 82,16 PAB
+   por año" (anual) y "Luego 10,39 PAB al mes" (mensual) — confirma que el precio único de $1 y el
+   precio recurrente del plan viajan juntos como se diseñó.
+2. Pago aprobado → redirigió a `/app?checkout=success`.
+3. El webhook recibió TODOS los eventos de Stripe (`checkout.session.completed`,
+   `customer.subscription.created`, `invoice.paid`, etc.) y respondió 200 en cada uno.
+4. Se confirmó en la base de datos real: `profiles.plan`, `activo`, `trial_activo`, `fecha_cobro` y
+   `stripe_subscription_id` quedaron con datos REALES de Stripe, no con los valores por defecto.
+5. Cuenta y datos de prueba borrados al terminar (cuenta de auth + filas de checkins/ciclo/medidas).
+
+🔍 Verificado: `tsc` ✓ `build` ✓ · pago real de prueba de punta a punta (2 veces) ✓ · webhook firmado
+y respondiendo 200 ✓ · base de datos actualizándose sola ✓. **Esta es la primera vez que el dinero
+(aunque sea de prueba) se mueve de verdad por el sistema — el gate de "DINERO" del checklist de
+cierre queda satisfecho para el flujo de cobro inicial** (falta todavía: dunning/pagos fallidos,
+portal de cancelación propio — ver checkpoint anterior).
+
+⚠️ Pendiente para pasar a producción de verdad:
+1. El usuario debe crear los MISMOS 3 productos en modo **Live** (ya existían de un intento anterior
+   por error — reusar esos o limpiar y crear de nuevo, su decisión) y darme esos 3 `price_...` de
+   modo Live + su `sk_live_...`.
+2. Cargar esas 4 variables (+ las que ya existían) en Vercel → Environment Variables.
+3. Crear el webhook DE VERDAD en el panel de Stripe (Developers → Webhooks) apuntando a
+   `https://<dominio-real>/api/stripe/webhook` una vez desplegado, y pasar el Signing Secret real
+   (el `whsec_...` que usamos hoy fue solo para pruebas locales, no sirve en producción).
+4. Hacer UN pago real pequeño de verdad (no de prueba) antes de anunciar el lanzamiento, para
+   confirmar que también funciona con dinero real y no solo en el entorno de prueba de Stripe.
+5. El Stripe CLI quedó instalado en esta máquina (`winget install Stripe.StripeCli`) por si hace
+   falta volver a probar localmente — no quedó ninguna sesión de `stripe listen` corriendo.
+
+⏸️ CHECKPOINT — 2026-09-13: el usuario decidió cambiar el modelo de precio (estrategia estilo Tony
+Robbins): en vez de "7 días gratis", ahora es **$1 por 7 días de acceso**, y al día 7 se activa
+solo el plan elegido — **Mensual $9.99/mes** (sin cambio) o **Anual $79/año** (antes $71.88/año).
+
+**Cómo se resolvió técnicamente (patrón nativo de Stripe, no hay que inventar nada raro):** el
+checkout de Stripe ahora manda 2 líneas en la misma sesión — el precio único de $1 (`STRIPE_PRICE_ACCESO_7DIAS`)
++ el precio recurrente del plan elegido, con `trial_period_days: 7` en la suscripción. Stripe cobra
+el $1 de inmediato (es un precio de una sola vez, no entra en el conteo de la prueba) y dispara solo
+el cobro completo del plan al día 7. No hace falta tocar el webhook — el ítem de $1 no se agrega a
+`subscription.items`, así que `planDelPriceId`/`current_period_end` siguen leyendo bien el plan real.
+
+**Nuevo: recordatorio 1 día antes del cobro.** El cron diario que ya existía (avisos de racha) ahora
+también revisa `profiles` donde `trial_activo = true` y `fecha_cobro = mañana`, y manda una
+notificación push avisando que al día siguiente se activa el plan — para que a nadie le agarre de
+sorpresa el cargo. `fecha_cobro` durante el trial YA es el `current_period_end` real de Stripe
+(el día exacto del primer cobro), así que no hizo falta ningún cálculo nuevo.
+
+**Ajustes de copy** en `app/paywall/page.tsx` (ya no dice "gratis" en ningún lado, ahora "$1"/"Empieza
+por $1") y `app/legal/terminos/page.tsx` (ya no dice "período de prueba gratuito").
+
+⚠️ **BLOQUEADO — no se pudo probar el flujo de pago real todavía.** Al intentar el primer checkout de
+prueba, Stripe devolvió: *"No such price... a similar object exists in **live mode**, but a **test
+mode** key was used"* — los 3 productos (`STRIPE_PRICE_ACCESO_7DIAS`, `STRIPE_PRICE_ANUAL`,
+`STRIPE_PRICE_MENSUAL`) se crearon con el interruptor de Stripe en modo **Live**, pero estamos
+probando con una clave `sk_test_...`. Se le explicó al usuario que debe activar "Test mode" en su
+panel de Stripe, volver a crear los mismos 3 productos ahí, y pasarme los 3 `price_...` de prueba
+nuevos. **Siguiente acción exacta: esperar esos 3 IDs de modo prueba del usuario**, repetir la
+prueba de checkout con una tarjeta de prueba de Stripe (4242 4242 4242 4242), confirmar que el
+webhook activa la cuenta, y solo después cambiar a las claves reales (`sk_live_`) para el
+lanzamiento de verdad — nunca probar con dinero real primero.
+
+🔍 Verificado hasta ahora: `tsc` ✓ `build` ✓ · el endpoint de checkout SÍ crea la sesión de Stripe
+de verdad (confirma que la lógica de autenticación, creación de customer y armado de line_items
+funciona) — el único bloqueo es el mismatch live/test de los Price ID, no un bug de código. No
+subido a git todavía en el momento de este checkpoint (queda como siguiente paso inmediato).
+
+⏸️ CHECKPOINT — 2026-09-11 (tarde): a pedido del usuario y Maru (revisando la app juntos), se
+construyó una **sección propia de Ciclo** (`/app/ciclo`, reemplaza la tarjeta que vivía escondida en
+Progreso) inspirada en apps tipo Clue — pero **descriptiva, nunca predictiva**: se decidió
+explícitamente NO copiar el conteo regresivo/predicción de próximo período de Clue, porque a los
+40-55 con perimenopausia el ciclo es irregular y esa predicción normalmente estaría mal. Se
+mantienen los colores de marca de EVA (no el rojo/turquesa de Clue).
+
+**Qué incluye:**
+- Calendario mensual navegable (← mes →), cada día coloreado según intensidad de sangrado real +
+  punto para días con check-in — toca cualquier día PASADO para registrar/editar ese día (antes solo
+  se podía registrar "hoy"; `RegistroCicloCard` se generalizó para aceptar cualquier `fecha`).
+- Resumen del mes: días de sangrado + promedio histórico de días ENTRE períodos (`promedioDiasEntreCiclos`
+  en `lib/app/engine.ts`) — solo aparece con ≥3 rachas de sangrado detectadas, nunca inventa un
+  número con poco historial, y es explícitamente "histórico", no una cuenta regresiva.
+- Correlaciones reales con inflamación/energía/sueño/digestión (`insightsCiclo`, ya existía, se le
+  agregó digestión) y con peso (`insightsPeso`, nueva) — **se corrigió un bug de diseño real
+  encontrado probando con datos**: la versión original exigía que la usuaria marcara a mano "hoy NO
+  sangré" para tener el lado de comparación, algo que casi nadie hace en la práctica. Ahora "sin
+  sangrado" = cualquier check-in/medición que no tenga sangrado registrado ese día — mucho más
+  realista sin perder honestidad (nunca inventa una ausencia, solo la infiere de que no hay dato de
+  sangrado).
+- Palabra de aliento contextual (rota entre 3 mensajes según haya o no sangrado hoy).
+- Tarjeta de **peso y talla** (usa `registrarMedida`/`obtenerMedidas`, ya existían en
+  `retosQueries.ts` sin UI) — resuelve el pendiente viejo de "falta pantalla de peso".
+- Link honesto a "Ve tu Ruta de hoy" — a propósito NO dice que Mi Ruta se ajusta sola al ciclo
+  (no es cierto, Mi Ruta se adapta por check-ins generales, no por `registros_ciclo`), solo invita a
+  mirarla.
+- Progreso ya no tiene el registro de ciclo ni sus insights — quedó una sola tarjeta-link a
+  `/app/ciclo` con un conteo de días registrados este mes.
+
+**Bug real encontrado y corregido en el camino (no relacionado al ciclo):** al conectar Stripe antes
+en esta sesión, el flujo de login mandaba a CUALQUIER inicio de sesión exitoso (incluidas cuentas
+YA existentes) a través de `continuarAPago()` — es decir, una usuaria que ya pagó habría sido
+mandada al checkout de Stripe cada vez que iniciara sesión. Corregido: el checkout solo se dispara
+tras crear una cuenta nueva; iniciar sesión en una cuenta existente va directo a `/app` como antes.
+
+**Ajuste de copy en EVA (pedido aparte, mismo día):** el botón para chatear libremente decía **"Es
+otra cosa"** — el usuario señaló que no se entendía que ahí se podía preguntar cualquier cosa.
+Cambiado a "Escríbeme lo que quieras" + subtítulo "Como un chat — pregunta cualquier cosa, sin
+opciones fijas", y el encabezado de la pantalla ahora dice "Háblame como le hablarías a Maru" —
+refuerza el marco ya decidido antes (EVA no se renombra a "Maru", pero se presenta con su criterio).
+
+🔍 Verificado: `tsc` ✓ `build` ✓ · probado en vivo con una cuenta de prueba creada por la API admin
+de Supabase (para saltar el límite de correo) con 60 días de check-ins sintéticos + 3 rachas de
+sangrado + mediciones de peso — las 5 correlaciones aparecieron correctamente, el promedio histórico
+mostró 28 días (coincide con los datos de prueba), el calendario coloreó bien las intensidades.
+Cuenta y datos de prueba borrados al terminar. Pantalla de EVA confirmada visualmente con el nuevo
+copy.
+
+Siguiente paso: el usuario sigue con lo de Stripe (crear productos, pasar Secret Key) — quedó
+pausado para atender este pedido de Ciclo primero, según sus propias palabras.
+
+⏸️ CHECKPOINT — 2026-09-11: se decidió Stripe en vez de Hotmart (Panamá no está soportado por
+Stripe para abrir cuenta, pero el usuario ya tiene una LLC en EE.UU. con cuenta en Mercury, así que
+sí puede usarlo). **Sin reparto automático (Connect)**: todo se cobra a la cuenta del usuario y él le
+paga su parte a Maru de forma manual — decisión explícita del usuario, no construir Connect.
+
+⏸️ CHECKPOINT — 2026-09-11: se decidió Stripe en vez de Hotmart (Panamá no está soportado por
+Stripe para abrir cuenta, pero el usuario ya tiene una LLC en EE.UU. con cuenta en Mercury, así que
+sí puede usarlo). **Sin reparto automático (Connect)**: todo se cobra a la cuenta del usuario y él le
+paga su parte a Maru de forma manual — decisión explícita del usuario, no construir Connect.
+
+**Lo que se construyó (en `desarrollo`, sin probar un pago real todavía — falta que el usuario cree
+los productos en su Stripe y pegue las claves):**
+- `lib/stripe/server.ts`: cliente de Stripe + mapeo plan↔Price ID (falla fuerte si faltan las env vars).
+- `app/api/stripe/checkout/route.ts`: crea la sesión de pago (7 días de prueba, luego cobro automático)
+  para la usuaria ya autenticada; crea el Customer de Stripe la primera vez y lo guarda en
+  `profiles.stripe_customer_id`. Verificado: responde 401 sin sesión.
+- `app/api/stripe/webhook/route.ts`: firma verificada (`stripe-signature` + `STRIPE_WEBHOOK_SECRET`) +
+  idempotente (tabla nueva `webhook_events`, clave primaria = id del evento — un mismo aviso
+  reenviado por Stripe no se vuelve a procesar). Escucha `checkout.session.completed`,
+  `customer.subscription.updated/deleted` y actualiza `profiles.plan/activo/trial_activo/fecha_cobro`
+  según el estado real de la suscripción. Verificado: responde 400 sin firma válida.
+- Flujo conectado: paywall (botón ahora pasa el plan elegido por URL) → login/registro (sin cambios)
+  → en vez de entrar directo a `/app`, la pantalla de bienvenida ahora dispara el checkout real de
+  Stripe; si falla, hay pantalla de error con "Intentar de nuevo" (nunca deja a la usuaria atascada).
+- Migración aplicada: `profiles.stripe_customer_id` / `stripe_subscription_id` + tabla
+  `webhook_events` (RLS sin políticas a propósito — solo el service role la toca). Advisor de
+  seguridad revisado: limpio (solo los INFO/WARN preexistentes esperados).
+- Todas las menciones a "Hotmart" cambiadas a "Stripe" (paywall, términos, reembolso, privacidad,
+  TrustBar, Guarantee, y los textos internos de `/admin`).
+
+🔍 Verificado: `tsc` ✓ `build` ✓ (rutas `/api/stripe/checkout` y `/api/stripe/webhook` nuevas,
+dinámicas) · probado en vivo: `/api/stripe/checkout` → 401 sin sesión, `/api/stripe/webhook` → 400
+sin firma válida, texto "Stripe" confirmado visualmente en el paywall. **NO probado**: un pago real
+de punta a punta — falta que el usuario complete su parte (ver abajo) antes de poder hacerlo.
+
+⚠️ Pendiente del usuario, en orden, para que esto funcione de verdad:
+1. Crear los 2 productos recurrentes en su Stripe (Anual $71.88/año, Mensual $9.99/mes) y pasar los
+   2 Price ID.
+2. Pasar la Secret Key de Stripe (por una vía seguridad, no por chat) → va a `STRIPE_SECRET_KEY`.
+3. Agregar `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ANUAL`, `STRIPE_PRICE_MENSUAL` en Vercel (el webhook
+   secret se agrega en el paso 4, después de desplegar).
+4. Una vez desplegado, crear el webhook en Stripe apuntando a
+   `https://<dominio-real>/api/stripe/webhook`, eventos: `checkout.session.completed`,
+   `customer.subscription.updated`, `customer.subscription.deleted` → copiar el "Signing secret" →
+   `STRIPE_WEBHOOK_SECRET` en Vercel → redeploy.
+5. Hacer un pago de prueba de punta a punta antes de anunciar el lanzamiento.
+
+Pendiente no bloqueante, anotado para después: no existe todavía un "portal de cliente" de Stripe
+para que la usuaria cancele sola desde su cuenta (hoy el texto legal dice que cancela escribiendo a
+soporte) — se puede agregar después con el Customer Portal de Stripe si hace falta. El manejo de
+pagos fallidos (dunning) tampoco está construido — hoy un cobro fallido (`past_due`) no le corta el
+acceso de inmediato, pero tampoco hay ningún aviso automático a la usuaria todavía.
+
+Siguiente acción exacta: el usuario completa los 4 pasos de arriba (productos, claves, webhook) y
+avisa cuando estén listos para hacer la primera prueba de pago real juntos.
+
+⏸️ CHECKPOINT — 2026-08-17: se construyó **Retos EVA**, el sistema de microexperimentos de 7 días
+que el usuario pidió para retención ("no dietas, retos que la mujer pueda compartir"). Todo en la
+rama `desarrollo` (no en `main` todavía — flujo de vista previa antes de publicar, ver más abajo).
 
 ⏸️ CHECKPOINT — 2026-08-17: se construyó **Retos EVA**, el sistema de microexperimentos de 7 días
 que el usuario pidió para retención ("no dietas, retos que la mujer pueda compartir"). Todo en la
@@ -62,9 +288,32 @@ recomendación · las 4 fotos del menú del día 1 confirmadas visualmente (coin
 datos de prueba borrados de la base al terminar.
 
 Siguiente acción exacta: el usuario revisa el link de vista previa de `desarrollo` y decide si
-fusiona a producción. Pendiente no bloqueante: agregar las 4 variables de push a Vercel, probar el
-permiso de notificaciones en un celular real, y cuando Maru mande contenido de más retos, sumarlos
-a la biblioteca (`lib/app/retos.ts`).
+fusiona a producción. Pendiente no bloqueante: probar el permiso de notificaciones en un celular
+real, y cuando Maru mande contenido de más retos, sumarlos a la biblioteca (`lib/app/retos.ts`).
+
+⏸️ CHECKPOINT — 2026-08-17 (tarde): Retos EVA ya está en producción real (`main` == `desarrollo`,
+usuario le dio "Promote to Production" en Vercel directamente). Las 4 variables de push ya están
+cargadas en Vercel. Se corrigió además:
+- **Bug de recuperación de contraseña**: Supabase Auth tenía "Site URL" en `localhost:3000` y
+  "Redirect URLs" vacío — cualquier link de recuperación fuera de local rebotaba al inicio. Ya se
+  agregaron las URLs correctas (localhost, `eva-40-plus.vercel.app` y el comodín de previews). El
+  límite de correos gratuito de Supabase (`over_email_send_rate_limit`) sigue bloqueando el envío
+  por las pruebas repetidas de hoy — se libera solo con el tiempo; para que no vuelva a pasar hace
+  falta SMTP propio (Resend) en vez del correo gratuito de Supabase — pendiente, no urgente.
+- **Feedback del usuario sobre Retos vs Mi Ruta** (aplicado): antes daban información
+  potencialmente distinta (dos motores de recomendación independientes) y Retos mostraba 3 tarjetas
+  para elegir. Ahora: Retos EVA muestra UN solo reto sugerido con un botón ("Empezar este reto"),
+  las otras opciones quedan ocultas detrás de un link "Ver otras opciones". Y cuando hay un reto
+  activo, Mi Ruta dejó de dar su propia recomendación aparte — para los días dentro del reto,
+  muestra la misión, el menú real (con fotos) y el movimiento real de ESE reto (componentes
+  compartidos ahora en `components/app/interna/RetoWidgets.tsx`).
+- **Nota de diseño pendiente (usuario)**: dijo que la app se ve "opaca y sin vida" y sugirió botones
+  en color naranja — explícitamente pidió dejarlo así por ahora, no se tocó paleta ni botones.
+  Recordar esto si se retoma una pasada de diseño/pulido.
+
+Siguiente paso: el usuario todavía no pudo entrar a probar en vivo por el límite de correo de
+Supabase (ni para resetear su contraseña real ni para crear una cuenta de prueba) — falta que se
+libere solo, o montar Resend, para verificar visualmente el cambio de sincronización.
 
 ⏸️ NUEVO FLUJO DE TRABAJO (decisión del usuario, vigente desde ahora): dejamos de subir directo a
 `main`. Se creó la rama `desarrollo` (`git checkout -b desarrollo`, ya empujada a GitHub). A partir

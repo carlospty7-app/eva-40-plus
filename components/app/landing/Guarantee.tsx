@@ -17,7 +17,7 @@ export function Guarantee() {
             devolvemos el 100% de tu dinero. Un correo, sin preguntas, sin formularios.
           </p>
           <p className="mt-3 text-[12.5px] text-txt-tertiary">
-            Respaldado por la garantía de reembolso de Hotmart de 7 días.
+            Pago procesado de forma segura por Stripe.
           </p>
         </div>
       </Reveal>

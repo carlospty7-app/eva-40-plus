@@ -143,7 +143,7 @@ const RUTA_TEMAS: Array<{
   },
   {
     mision: "Aligera hacia el fin de semana",
-    alimentosRecomendados: ["Vegetales de hoja verde", "Pescado o proteína magra", "Proteína en polvo (opcional)"],
+    alimentosRecomendados: ["Vegetales de hoja verde", "Pescado o proteína magra"],
     alimentosLimitar: ["Alcohol", "Ultraprocesados"],
     habitoPrioritario: "Camina después de la cena",
     menu: {

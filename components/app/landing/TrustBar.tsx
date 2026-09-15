@@ -4,7 +4,7 @@ import { Reveal } from "@/components/app/ui/Reveal";
 const items = [
   { icon: ShieldCheck, text: "Garantía de 7 días, sin preguntas" },
   { icon: Building2, text: "Creado por MaruHealthy" },
-  { icon: Lock, text: "Pago seguro procesado por Hotmart" },
+  { icon: Lock, text: "Pago seguro procesado por Stripe" },
 ];
 
 export function TrustBar() {

@@ -13,9 +13,11 @@ export default function TerminosPage() {
         hormonales. No es un dispositivo médico ni un servicio de diagnóstico clínico.
       </p>
       <p>
-        <strong>Suscripción:</strong> EVA 40+ se cobra mensual o anualmente, con un período de
-        prueba gratuito según el plan elegido. Puedes cancelar cuando quieras desde tu cuenta o
-        desde el panel de compra de Hotmart; la cancelación aplica al final del período pagado.
+        <strong>Suscripción:</strong> el acceso a EVA 40+ empieza con un cargo de $1 por los
+        primeros 7 días; al terminar ese período se activa automáticamente el plan mensual o
+        anual elegido, procesado de forma segura por Stripe, salvo que canceles antes. Puedes
+        cancelar cuando quieras escribiéndonos a soporte; la cancelación aplica al final del
+        período pagado.
       </p>
       <p>
         <strong>Uso permitido:</strong> la cuenta es personal e intransferible. No está permitido
