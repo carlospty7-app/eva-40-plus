@@ -1,5 +1,40 @@
 # ESTADO — EVA 40+
-Última actualización: 2026-09-15 (tarde) | Sesión actual: 10 — Stripe Live activo en producción + sistema de correos del negocio
+Última actualización: 2026-09-15 (noche) | Sesión actual: 10 — Stripe Live + correos del negocio + doble oferta
+
+⏸️ CHECKPOINT — 2026-09-15 (noche): nueva función terminada de construir esta sesión — **soporte para
+2 ofertas de precio al mismo tiempo**, a pedido del usuario ("a veces queremos $1 por 7 días estilo
+Tony Robbins, a veces 7 días totalmente gratis — ¿se pueden tener las dos?"). Se eligió la opción
+recomendada: **un mismo link de paywall + un parámetro al final de la URL** (`?oferta=gratis`), en
+vez de duplicar pantallas o crear links separados. Por defecto (sin el parámetro) sigue siendo la
+oferta de $1 — **ningún link ya compartido se rompe**.
+
+**Qué se tocó (los 4 archivos, ya con `tsc`/`build` verificados limpios):**
+- `app/paywall/page.tsx`: lee `?oferta=gratis` de la URL, cambia el copy del CTA ("Activar 7 días
+  gratis" en vez de "Empezar por $1") y esconde la mención al cobro de $1 cuando aplica.
+- `app/login/page.tsx`: lee `oferta` de la URL (heredada del paywall) y la manda en el body al
+  llamar a `/api/stripe/checkout`.
+- `app/api/stripe/checkout/route.ts`: si `oferta === "gratis"`, arma la sesión de Stripe SIN la
+  línea de cobro único de $1 (`STRIPE_PRICE_ACCESO_7DIAS`) — solo la suscripción con
+  `trial_period_days: 7`, así que Stripe no cobra nada hasta el día 7. Guarda `oferta` en
+  `subscription_data.metadata` para que quede registrado en la suscripción real de Stripe.
+- `lib/email/plantillas.ts` (`correoBienvenida`) + `app/api/stripe/webhook/route.ts`: el correo de
+  bienvenida ahora lee `subscription.metadata.oferta` y cambia su texto — ya no dice "tu pago se
+  procesó" cuando en realidad no hubo ningún cobro (caso gratis).
+
+🔍 Verificado: `tsc --noEmit` ✓ · `npm run build` ✓ (compiló limpio, generó las 31 páginas sin
+error) · sesión de checkout real creada contra la API de Stripe en modo Live con `oferta: "gratis"`
+confirmando que la sesión solo lleva 1 línea (el plan, sin el cobro de $1) — cliente de prueba
+borrado al terminar. **Falta**: probar el flujo completo navegando de verdad
+(`https://eva40.app/paywall?oferta=gratis` → login → checkout → correo) antes de darlo por 100%
+probado en producción, y el usuario todavía no ha visto/aprobado esta función.
+
+⚠️ Pendiente inmediato:
+1. Commitear a `desarrollo` (todavía NO está en git — son cambios sin commitear ahora mismo).
+2. Pedirle al usuario que revise el link de vista previa de `desarrollo` antes de fusionar a `main`
+   — esto toca el flujo real de cobro, no se sube a producción sin su aprobación explícita.
+3. Explicarle en simple cómo usar el nuevo parámetro: agregar `?oferta=gratis` al final del link del
+   paywall que comparta cuando quiera la versión sin cobro inicial; sin el parámetro, sigue cobrando
+   $1 como hasta ahora.
 
 ⏸️ CHECKPOINT — 2026-09-15 (tarde): dos cosas grandes esta sesión.
 

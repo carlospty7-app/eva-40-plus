@@ -92,7 +92,8 @@ export async function POST(req: Request) {
         const resultado = await aplicarSuscripcion(subscription);
         const destinatario = session.customer_details?.email ?? (resultado ? await emailDeUsuario(resultado.userId) : null);
         if (destinatario && resultado) {
-          const { asunto, html } = correoBienvenida(resultado.plan);
+          const oferta = subscription.metadata?.oferta === "gratis" ? "gratis" : "pagado";
+          const { asunto, html } = correoBienvenida(resultado.plan, oferta);
           await enviarCorreo(destinatario, asunto, html);
         }
       }

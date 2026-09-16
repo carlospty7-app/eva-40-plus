@@ -29,12 +29,14 @@ export default function LoginPage() {
   const [recuperarError, setRecuperarError] = useState<string | null>(null);
   const [recuperarLoading, setRecuperarLoading] = useState(false);
   const [plan, setPlan] = useState<"anual" | "mensual">("anual");
+  const [oferta, setOferta] = useState<"pagado" | "gratis">("pagado");
   const [errorPago, setErrorPago] = useState<string | null>(null);
   const [iniciandoPago, setIniciandoPago] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("plan") === "mensual") setPlan("mensual");
+    if (params.get("oferta") === "gratis") setOferta("gratis");
   }, []);
 
   async function continuarAPago() {
@@ -45,7 +47,7 @@ export default function LoginPage() {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, oferta }),
       });
       if (!res.ok) throw new Error("checkout_failed");
       const data = await res.json();

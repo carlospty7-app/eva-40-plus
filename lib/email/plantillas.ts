@@ -51,16 +51,23 @@ function titulo(texto: string): string {
 const PLAN_LABEL: Record<string, string> = { anual: "anual ($79/año)", mensual: "mensual ($9.99/mes)" };
 
 // A1 — Bienvenida / confirmación de pago (el más crítico: confirma que el cobro fue real y qué sigue)
-export function correoBienvenida(plan: string, variante: "A" | "B" = "A") {
+export function correoBienvenida(plan: string, oferta: "pagado" | "gratis" = "pagado", variante: "A" | "B" = "A") {
+  const esGratis = oferta === "gratis";
   const asunto =
     variante === "A" ? "Tu acceso a EVA 40+ ya está activo 🌿" : "Listo — tu ruta ya te está esperando";
-  const preheader = "Tu pago se procesó y ya puedes entrar a tu ruta.";
+  const preheader = esGratis
+    ? "Tus 7 días gratis ya empezaron — sin ningún cobro."
+    : "Tu pago se procesó y ya puedes entrar a tu ruta.";
   const cuerpo =
     titulo("Ya eres parte de EVA 40+") +
     parrafo(
-      "Tu pago se procesó sin problema y tu plan " +
-        (PLAN_LABEL[plan] ?? "") +
-        " ya está activo. Nada de cobros confusos ni sorpresas — esto es justo lo que aceptaste.",
+      esGratis
+        ? "Tus 7 días completamente gratis ya empezaron — no se te cobró nada. Tu plan " +
+            (PLAN_LABEL[plan] ?? "") +
+            " se activa solo al terminar tu prueba, y puedes cancelar antes si quieres."
+        : "Tu pago se procesó sin problema y tu plan " +
+            (PLAN_LABEL[plan] ?? "") +
+            " ya está activo. Nada de cobros confusos ni sorpresas — esto es justo lo que aceptaste.",
     ) +
     parrafo(
       "Lo que sigue es simple: entra, haz tu revisión de 60 segundos, y deja que tu Ruta se ajuste a lo que tu cuerpo te está diciendo esta semana.",
@@ -69,7 +76,11 @@ export function correoBienvenida(plan: string, variante: "A" | "B" = "A") {
     parrafo(
       "<span style='color:" +
         TEXTO_SUAVE +
-        ";font-size:13px;'>¿Algo no cuadra con el cobro? Escríbenos a hola@eva40.app, sin preguntas.</span>",
+        ";font-size:13px;'>" +
+        (esGratis
+          ? "¿Alguna duda sobre tu prueba? Escríbenos a hola@eva40.app."
+          : "¿Algo no cuadra con el cobro? Escríbenos a hola@eva40.app, sin preguntas.") +
+        "</span>",
     );
   return { asunto, html: envoltura(preheader, cuerpo) };
 }

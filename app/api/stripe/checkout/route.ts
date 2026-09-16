@@ -3,12 +3,14 @@ import { crearClienteStripe, priceIdAcceso7Dias, priceIdDelPlan, type PlanEva } 
 
 export const runtime = "nodejs";
 
-type CuerpoCheckout = { plan?: string };
+type CuerpoCheckout = { plan?: string; oferta?: string };
 
 /** Crea una sesión de pago de Stripe para la usuaria autenticada y devuelve la URL a la que hay
- * que redirigirla. Cobra $1 de una vez por los primeros 7 días de acceso (línea de precio único)
- * y, en paralelo, arranca la suscripción del plan elegido con 7 días de prueba — al día 7, Stripe
- * cobra sola el plan completo, sin que el $1 cuente para eso. */
+ * que redirigirla. Soporta 2 ofertas, controladas por `oferta` (viene del paywall vía `?oferta=`):
+ * - "pagado" (por defecto): cobra $1 de una vez por los primeros 7 días de acceso (línea de precio
+ *   único) y, en paralelo, arranca la suscripción del plan elegido con 7 días de prueba.
+ * - "gratis": arranca la MISMA suscripción con 7 días de prueba, pero SIN el cobro de $1 — 7 días
+ *   totalmente gratis, sin ningún cargo hasta que Stripe cobre sola el plan completo al día 7. */
 export async function POST(req: Request) {
   const supabase = await crearClienteServidor();
   const {
@@ -24,6 +26,7 @@ export async function POST(req: Request) {
   }
 
   const plan: PlanEva = body.plan === "mensual" ? "mensual" : "anual";
+  const esOfertaGratis = body.oferta === "gratis";
 
   const origin = req.headers.get("origin") || new URL(req.url).origin;
   const stripe = crearClienteStripe();
@@ -49,12 +52,12 @@ export async function POST(req: Request) {
     customer: customerId,
     client_reference_id: user.id,
     line_items: [
-      { price: priceIdAcceso7Dias(), quantity: 1 },
+      ...(esOfertaGratis ? [] : [{ price: priceIdAcceso7Dias(), quantity: 1 }]),
       { price: priceIdDelPlan(plan), quantity: 1 },
     ],
     subscription_data: {
       trial_period_days: 7,
-      metadata: { user_id: user.id, plan },
+      metadata: { user_id: user.id, plan, oferta: esOfertaGratis ? "gratis" : "pagado" },
     },
     metadata: { user_id: user.id, plan },
     success_url: `${origin}/app?checkout=success`,

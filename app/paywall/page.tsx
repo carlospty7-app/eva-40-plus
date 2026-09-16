@@ -56,6 +56,8 @@ function AnimatedScore({ value }: { value: number }) {
   return <span className="tabular-nums">{display}</span>;
 }
 
+type Oferta = "pagado" | "gratis";
+
 export default function PaywallPage() {
   const router = useRouter();
   const [plan, setPlan] = useState<"anual" | "mensual">("anual");
@@ -63,10 +65,17 @@ export default function PaywallPage() {
   const [isPending, setIsPending] = useState(false);
   const [ctaPrincipalVisible, setCtaPrincipalVisible] = useState(false);
   const ctaPrincipalRef = useRef<HTMLDivElement>(null);
+  // Qué oferta mostrar — por defecto la de $1 (estrategia actual). Se puede mandar tráfico a
+  // /paywall?oferta=gratis para la variante de 7 días totalmente gratis, sin tocar el resto de
+  // la página ni crear una pantalla duplicada.
+  const [oferta, setOferta] = useState<Oferta>("pagado");
+  const esGratis = oferta === "gratis";
 
   useEffect(() => {
     const saved = leerDiagnostico();
     if (saved) setData(saved);
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("oferta") === "gratis") setOferta("gratis");
   }, []);
 
   useEffect(() => {
@@ -83,8 +92,10 @@ export default function PaywallPage() {
   function irALogin() {
     if (isPending) return;
     setIsPending(true);
-    router.push(`/login?plan=${plan}`);
+    router.push(`/login?plan=${plan}&oferta=${oferta}`);
   }
+
+  const textoCtaPrincipal = esGratis ? "Activar 7 días gratis" : "Empezar por $1";
 
   const precio = plan === "anual" ? "$79/año" : "$9.99/mes";
 
@@ -216,8 +227,17 @@ export default function PaywallPage() {
       </div>
 
       <p className="relative mt-6 text-center text-[12.5px] text-txt-secondary">
-        Empieza por <span className="font-semibold text-txt-primary">$1</span> — probablemente
-        menos de lo que ya gastaste en suplementos o retos que no calzaban contigo.
+        {esGratis ? (
+          <>
+            <span className="font-semibold text-txt-primary">7 días completamente gratis</span> —
+            no se te cobra nada hasta que termine tu prueba.
+          </>
+        ) : (
+          <>
+            Empieza por <span className="font-semibold text-txt-primary">$1</span> — probablemente
+            menos de lo que ya gastaste en suplementos o retos que no calzaban contigo.
+          </>
+        )}
       </p>
 
       <motion.div
@@ -236,7 +256,9 @@ export default function PaywallPage() {
             </span>
             <div>
               <p className="text-[13px] font-semibold text-txt-primary">Hoy</p>
-              <p className="text-[12px] text-txt-tertiary">Pagas $1 y entras de una vez a tu ruta</p>
+              <p className="text-[12px] text-txt-tertiary">
+                {esGratis ? "Empiezas gratis, sin ningún cobro" : "Pagas $1 y entras de una vez a tu ruta"}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -266,7 +288,7 @@ export default function PaywallPage() {
 
       <div ref={ctaPrincipalRef} className="relative mt-6">
         <TapButton onClick={irALogin} disabled={isPending}>
-          {isPending ? "Un momento…" : "Empezar por $1"}
+          {isPending ? "Un momento…" : textoCtaPrincipal}
         </TapButton>
         <p className="mt-3 text-center text-[12px] text-txt-tertiary">
           Cancela cuando quieras, sin llamadas · Tu plan se activa el {fechaEnDias(7)}
@@ -298,7 +320,7 @@ export default function PaywallPage() {
         <div className="mx-auto flex max-w-[420px] items-center gap-3">
           <div className="shrink-0">
             <p className="font-display text-[16px] leading-none text-txt-primary">{precio}</p>
-            <p className="text-[10.5px] text-txt-tertiary">Empieza por $1</p>
+            <p className="text-[10.5px] text-txt-tertiary">{esGratis ? "7 días gratis" : "Empieza por $1"}</p>
           </div>
           <button
             type="button"
@@ -306,7 +328,7 @@ export default function PaywallPage() {
             disabled={isPending}
             className="h-[52px] flex-1 rounded-full bg-brand-primary text-[15px] font-semibold text-txt-inverse transition-transform active:scale-[0.98] disabled:opacity-60"
           >
-            {isPending ? "Un momento…" : "Empezar por $1"}
+            {isPending ? "Un momento…" : textoCtaPrincipal}
           </button>
         </div>
       </motion.div>
