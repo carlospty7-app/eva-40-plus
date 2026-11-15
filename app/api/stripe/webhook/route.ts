@@ -48,6 +48,7 @@ async function aplicarSuscripcion(subscription: Stripe.Subscription) {
     .from("profiles")
     .update({
       stripe_subscription_id: subscription.id,
+      stripe_customer_id: typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id,
       plan,
       activo,
       trial_activo: trialActivo,
@@ -110,7 +111,11 @@ async function procesarEvento(stripe: Stripe, event: Stripe.Event) {
         const destinatario = session.customer_details?.email ?? (resultado ? await emailDeUsuario(resultado.userId) : null);
         if (destinatario && resultado) {
           const oferta = subscription.metadata?.oferta === "gratis" ? "gratis" : "pagado";
-          const { asunto, html } = correoBienvenida(resultado.plan, oferta);
+          const { asunto, html } = correoBienvenida(
+            resultado.plan,
+            oferta,
+            subscription.trial_end ? new Date(subscription.trial_end * 1000) : undefined,
+          );
           await enviarCorreo(destinatario, asunto, html);
         }
       }

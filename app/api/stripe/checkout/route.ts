@@ -1,3 +1,4 @@
+import { crearClienteAdmin } from "@/lib/supabase/admin";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { crearClienteStripe, priceIdAcceso7Dias, priceIdDelPlan, type PlanEva } from "@/lib/stripe/server";
 import { origenSeguro } from "@/lib/stripe/origen";
@@ -48,7 +49,12 @@ export async function POST(req: Request) {
       metadata: { user_id: user.id },
     });
     customerId = customer.id;
-    await supabase.from("profiles").update({ stripe_customer_id: customerId }).eq("id", user.id);
+    // Con el cliente de servicio: las usuarias ya no pueden escribir sus columnas de pago.
+    const { error: errorGuardar } = await crearClienteAdmin()
+      .from("profiles")
+      .update({ stripe_customer_id: customerId })
+      .eq("id", user.id);
+    if (errorGuardar) console.error("No se pudo guardar el cliente de Stripe", errorGuardar);
   }
 
   const session = await stripe.checkout.sessions.create({

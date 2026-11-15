@@ -50,24 +50,34 @@ function titulo(texto: string): string {
 
 const PLAN_LABEL: Record<string, string> = { anual: "anual ($79/año)", mensual: "mensual ($9.99/mes)" };
 
-// A1 — Bienvenida / confirmación de pago (el más crítico: confirma que el cobro fue real y qué sigue)
-export function correoBienvenida(plan: string, oferta: "pagado" | "gratis" = "pagado", variante: "A" | "B" = "A") {
+// A1 — Bienvenida / confirmación de acceso (el más crítico: dice con exactitud qué se cobró y cuándo se cobra lo demás)
+export function correoBienvenida(
+  plan: string,
+  oferta: "pagado" | "gratis" = "pagado",
+  fechaCobro?: Date,
+  variante: "A" | "B" = "A",
+) {
   const esGratis = oferta === "gratis";
+  const planTexto = PLAN_LABEL[plan] ?? "";
+  const fecha = fechaCobro
+    ? fechaCobro.toLocaleDateString("es", { day: "numeric", month: "long", timeZone: "UTC" })
+    : null;
+  const cuandoSeCobra = fecha
+    ? "El " + fecha + " se activa tu plan " + planTexto + " y ese será tu primer cobro; un día antes te avisamos."
+    : "Al terminar tus 7 días se activa tu plan " + planTexto + " y ese será tu primer cobro; un día antes te avisamos.";
   const asunto =
     variante === "A" ? "Tu acceso a EVA 40+ ya está activo 🌿" : "Listo — tu ruta ya te está esperando";
   const preheader = esGratis
     ? "Tus 7 días gratis ya empezaron — sin ningún cobro."
-    : "Tu pago se procesó y ya puedes entrar a tu ruta.";
+    : "Pagaste $1 y tu acceso de 7 días ya está activo.";
   const cuerpo =
     titulo("Ya eres parte de EVA 40+") +
     parrafo(
-      esGratis
-        ? "Tus 7 días completamente gratis ya empezaron — no se te cobró nada. Tu plan " +
-            (PLAN_LABEL[plan] ?? "") +
-            " se activa solo al terminar tu prueba, y puedes cancelar antes si quieres."
-        : "Tu pago se procesó sin problema y tu plan " +
-            (PLAN_LABEL[plan] ?? "") +
-            " ya está activo. Nada de cobros confusos ni sorpresas — esto es justo lo que aceptaste.",
+      (esGratis
+        ? "Tus 7 días completamente gratis ya empezaron — no se te cobró nada. "
+        : "Tu pago de $1 se procesó sin problema y ya tienes acceso completo por tus primeros 7 días. ") +
+        cuandoSeCobra +
+        " Puedes cancelar cuando quieras, tú misma, desde Cuenta dentro de la app.",
     ) +
     parrafo(
       "Lo que sigue es simple: entra, haz tu revisión de 60 segundos, y deja que tu Ruta se ajuste a lo que tu cuerpo te está diciendo esta semana.",
