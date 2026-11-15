@@ -155,7 +155,7 @@ export default function PaywallPage() {
             Sabemos que lo que más te pesa ahora es {data.dolorLabel} — por eso tu ruta arranca justo ahí.
           </p>
         )}
-        <p className="mt-2 flex items-center gap-2 text-[11.5px] text-txt-tertiary">
+        <p className="mt-2 flex items-center gap-2 text-[12px] text-txt-tertiary">
           <BadgeCheck className="h-3.5 w-3.5 text-brand-primary" />
           No empiezas de cero: seguimos justo donde quedó tu diagnóstico
         </p>
@@ -215,7 +215,7 @@ export default function PaywallPage() {
               : "border-transparent bg-surface-tertiary/50"
           }`}
         >
-          <span className="absolute -top-2.5 left-4 rounded-full bg-brand-gold px-2.5 py-0.5 text-[10px] font-bold text-surface-dark-2">
+          <span className="absolute -top-2.5 left-4 rounded-full bg-brand-gold px-2.5 py-0.5 text-[12px] font-bold text-surface-dark-2">
             MEJOR VALOR · AHORRA 34%
           </span>
           <div className="flex items-center justify-between">
@@ -224,7 +224,7 @@ export default function PaywallPage() {
               $79<span className="text-[12px] text-txt-tertiary">/año</span>
             </span>
           </div>
-          <p className="mt-1 text-[11.5px] text-txt-tertiary">Equivale a $6.58/mes</p>
+          <p className="mt-1 text-[12px] text-txt-tertiary">Equivale a $6.58/mes</p>
         </motion.button>
 
         <motion.button
@@ -269,7 +269,7 @@ export default function PaywallPage() {
         transition={{ delay: 0.5 }}
         className="relative mt-6 rounded-xl bg-surface-tertiary/60 p-4"
       >
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-txt-tertiary">
+        <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.08em] text-txt-tertiary">
           Así funciona tu acceso de 7 días
         </p>
         <div className="space-y-3">
@@ -327,7 +327,7 @@ export default function PaywallPage() {
         Ahora no
       </button>
 
-      <div className="relative mt-4 flex items-center justify-center gap-2 text-[11.5px] text-txt-tertiary">
+      <div className="relative mt-4 flex items-center justify-center gap-2 text-[12px] text-txt-tertiary">
         <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
         <span>Si no te sirve, te devolvemos tu pago · Stripe</span>
       </div>
@@ -343,7 +343,7 @@ export default function PaywallPage() {
         <div className="mx-auto flex max-w-[420px] items-center gap-3">
           <div className="shrink-0">
             <p className="font-display text-[16px] leading-none text-txt-primary">{precio}</p>
-            <p className="text-[10.5px] text-txt-tertiary">{esGratis ? "7 días gratis" : "Empieza por $1"}</p>
+            <p className="text-[12px] text-txt-tertiary">{esGratis ? "7 días gratis" : "Empieza por $1"}</p>
           </div>
           <button
             type="button"

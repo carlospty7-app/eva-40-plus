@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
-import { Brain, Check, Cookie, Flame, Mic, Moon, Pencil, Square, Users, Utensils, Zap } from "lucide-react";
+import { Activity, Brain, Check, Cookie, Flame, Mic, Moon, Pencil, Square, Users, Utensils, Zap } from "lucide-react";
 import { TopHeader } from "@/components/app/interna/TopHeader";
 import { CargandoOError } from "@/components/app/ui/CargandoOError";
 import { EscalaCheckin } from "@/components/app/interna/EscalaCheckin";
@@ -72,6 +72,8 @@ export default function HoyPage() {
   }, []);
 
   const [mostrarNotas, setMostrarNotas] = useState(false);
+  const [tocados, setTocados] = useState<Set<string>>(new Set());
+  const [errorGuardado, setErrorGuardado] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = crearClienteNavegador();
@@ -128,15 +130,30 @@ export default function HoyPage() {
 
   async function confirmarCheckin() {
     const eraEdicion = editando;
+    const MENSAJE_ERROR = "No pudimos guardar tu revisión. Revisa tu conexión y toca de nuevo — no perdiste nada.";
+    if (!estado || !userId) {
+      setErrorGuardado(MENSAJE_ERROR);
+      return;
+    }
+    setErrorGuardado(null);
     setFase("analizando");
-    if (!estado || !userId) return;
 
     const supabase = crearClienteNavegador();
     const hoy = isoFecha(new Date());
     const diasAntes = estado.rutaSemana.filter((d) => d.completado).length;
-    const { ok } = await registrarCheckinSupabase(supabase, userId, hoy, valores, notas);
-    const nuevo = await cargarEstadoSupabase(supabase, userId);
-    if (!nuevo) return;
+    let ok = false;
+    let nuevo: EstadoApp | null = null;
+    try {
+      ({ ok } = await registrarCheckinSupabase(supabase, userId, hoy, valores, notas));
+      nuevo = await cargarEstadoSupabase(supabase, userId);
+    } catch {
+      nuevo = null;
+    }
+    if (!nuevo) {
+      setFase("form");
+      setErrorGuardado(MENSAJE_ERROR);
+      return;
+    }
     const diasDespues = nuevo.rutaSemana.filter((d) => d.completado).length;
 
     setEstado(nuevo);
@@ -282,7 +299,7 @@ export default function HoyPage() {
               <div className="mt-3 divide-y divide-border-default/60">
                 {[
                   {
-                    icon: Flame,
+                    icon: Activity,
                     label: "Inflamación",
                     textos: ["Nada", "Poca", "Media", "Bastante", "Mucha"] as const,
                     campo: "inflamacion" as const,
@@ -329,13 +346,28 @@ export default function HoyPage() {
                       label={fila.label}
                       textos={[...fila.textos]}
                       valor={valores[fila.campo]}
-                      onChange={(v) => setValores((s) => ({ ...s, [fila.campo]: v }))}
+                      onChange={(v) => {
+                        setValores((s) => ({ ...s, [fila.campo]: v }));
+                        setTocados((prev) => new Set(prev).add(fila.campo));
+                      }}
                     />
                   </motion.div>
                 ))}
               </div>
               <div className="mt-4 space-y-2">
-                <TapButton onClick={confirmarCheckin}>Ver mi recomendación de hoy</TapButton>
+                {errorGuardado && (
+                  <p role="alert" className="text-[13.5px] font-medium text-status-error">
+                    {errorGuardado}
+                  </p>
+                )}
+                <TapButton disabled={!editando && tocados.size === 0} onClick={confirmarCheckin}>
+                  Ver mi recomendación de hoy
+                </TapButton>
+                {!editando && tocados.size === 0 && (
+                  <p className="text-center text-[13px] text-txt-tertiary">
+                    Toca cómo te sientes en al menos una fila para continuar.
+                  </p>
+                )}
                 {editando && (
                   <button
                     type="button"

@@ -165,7 +165,7 @@ export default function EvaPage() {
           </span>
           <div className="min-w-0">
             <h1 className="font-display text-[19px] font-medium leading-[1.25] text-txt-primary">
-              Háblame como le hablarías a Maru
+              Cuéntame cómo estás hoy
             </h1>
             <p className="mt-1 text-[13px] leading-relaxed text-txt-secondary">
               Pregúntame lo que sea sobre tu alimentación, tus síntomas o cómo te sientes hoy.

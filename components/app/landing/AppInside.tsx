@@ -13,7 +13,7 @@ export function AppInside() {
         </h2>
       </Reveal>
 
-      <div className="mt-8 -mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2">
+      <div className="mt-8 -mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* Pantalla 1 — Score Metabólico */}
         <Reveal delay={0} className="w-[210px] shrink-0 snap-center">
           <div className="h-full rounded-2xl bg-surface-dark p-5 text-center text-txt-inverse shadow-md">

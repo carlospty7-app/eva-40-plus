@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Area, AreaChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { motion } from "motion/react";
-import { Droplet, Lightbulb, TrendingDown, TrendingUp } from "lucide-react";
+import { Droplet, Flame, Lightbulb, TrendingDown, TrendingUp } from "lucide-react";
 import { TopHeader } from "@/components/app/interna/TopHeader";
 import { CargandoOError } from "@/components/app/ui/CargandoOError";
 import { ScoreRing } from "@/components/app/ui/ScoreRing";
@@ -140,6 +140,9 @@ export default function ProgresoPage() {
                 {delta} pts vs. hace 7 días
               </p>
             )}
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-brand-accent-soft py-1 pl-2 pr-3 text-[13px] font-semibold text-txt-primary">
+              <Flame className="h-4 w-4 text-brand-accent" /> Racha de {estado.rachaDias} {estado.rachaDias === 1 ? "día" : "días"}
+            </p>
           </div>
         </motion.div>
 

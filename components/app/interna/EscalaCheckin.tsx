@@ -19,11 +19,11 @@ export function EscalaCheckin({
   return (
     <div className="py-3">
       <div className="mb-2 flex items-center justify-between">
-        <span className="flex items-center gap-2 text-[13.5px] font-medium text-txt-primary">
+        <span className="flex items-center gap-2 text-[14px] font-medium text-txt-primary">
           <Icon className="h-4 w-4 text-brand-primary" />
           {label}
         </span>
-        <span className="text-[12px] text-txt-tertiary">{textos[valor - 1]}</span>
+        <span className="text-[13px] text-txt-secondary">{textos[valor - 1]}</span>
       </div>
       <div className="flex gap-2">
         {[1, 2, 3, 4, 5].map((n) => (
@@ -34,7 +34,7 @@ export function EscalaCheckin({
             aria-pressed={valor === n}
             whileTap={{ scale: 0.9 }}
             onClick={() => onChange(n)}
-            className={`h-9 flex-1 rounded-lg transition-colors ${
+            className={`h-11 flex-1 rounded-lg transition-colors ${
               n === valor
                 ? "bg-brand-primary"
                 : n < valor

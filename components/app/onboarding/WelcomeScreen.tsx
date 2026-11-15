@@ -31,7 +31,7 @@ export function WelcomeScreen({ onStart }: { onStart: () => void }) {
         variants={item}
         className="mt-6 max-w-[24ch] font-display text-[28px] font-medium leading-[1.15] text-txt-primary"
       >
-        Bienvenida a tu espacio de regulación metabólica 40+
+        Vamos a entender por qué tu cuerpo ya no responde igual
       </motion.h1>
       <motion.p
         variants={item}

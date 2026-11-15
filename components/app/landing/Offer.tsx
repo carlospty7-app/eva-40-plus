@@ -10,19 +10,16 @@ const stack = [
   {
     icon: Stethoscope,
     title: "Diagnóstico completo + Score Metabólico 40+",
-    value: "$17",
     kills: "“No sé si esto aplica a mi caso”",
   },
   {
     icon: CalendarRange,
     title: "Ruta semanal personalizada, actualizada sola",
-    value: "$29/mes",
     kills: "“Ya probé dietas genéricas”",
   },
   {
     icon: Waves,
     title: "Microprotocolos: inflamación, sueño, antojos, estrés",
-    value: "$19",
     kills: "“No quiero otra app que después no uso”",
   },
 ];
@@ -33,7 +30,7 @@ export function Offer() {
       <Reveal>
         <Eyebrow>Tu ruta, sin adivinar</Eyebrow>
         <h2 className="font-display text-[26px] font-medium leading-tight text-txt-primary md:text-[32px]">
-          Todo lo que necesitas para desinflamarte, sin dietas extremas
+          Todo lo que necesitas para desinflamarte, sin dietas
         </h2>
       </Reveal>
 
@@ -46,9 +43,6 @@ export function Offer() {
                 <p className="text-[13.5px] font-semibold text-txt-primary">{item.title}</p>
                 <p className="mt-0.5 text-[13px] text-txt-tertiary">Para cuando piensas: {item.kills}</p>
               </div>
-              <span className="pt-1 text-[13px] font-semibold text-txt-tertiary line-through">
-                {item.value}
-              </span>
             </div>
           ))}
         </div>
@@ -74,7 +68,7 @@ export function Offer() {
               fullWidth
               className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-lg bg-brand-primary text-[14px] font-semibold text-txt-inverse transition-transform hover:scale-[1.02]"
             >
-              <SegunOferta pagado="Empezar por $1" gratis="Empezar 7 días gratis" />
+              Hacer mi diagnóstico gratis
             </TapLink>
           </div>
         </Reveal>
@@ -82,7 +76,7 @@ export function Offer() {
         <Reveal delay={0.08}>
           <div className="relative overflow-hidden rounded-2xl bg-surface-dark p-6 text-txt-inverse">
             <BotanicalGlow className="opacity-70" />
-            <span className="absolute -top-3 left-6 rounded-full bg-brand-gold px-3 py-1 text-[12px] font-semibold text-surface-dark-2">
+            <span className="absolute right-4 top-4 rounded-full bg-brand-gold px-3 py-1 text-[12px] font-semibold text-surface-dark-2">
               Mejor valor
             </span>
             <div className="relative">
@@ -106,7 +100,7 @@ export function Offer() {
                 fullWidth
                 className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-lg bg-txt-inverse text-[14px] font-semibold text-brand-primary transition-transform hover:scale-[1.02]"
               >
-                <SegunOferta pagado="Empezar por $1" gratis="Empezar 7 días gratis" />
+                Hacer mi diagnóstico gratis
               </TapLink>
             </div>
           </div>

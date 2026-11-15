@@ -315,7 +315,7 @@ export default function CuentaPage() {
                       type="button"
                       onClick={activarPush}
                       disabled={recordatoriosEstado === "activando"}
-                      className="mt-2.5 flex h-9 items-center rounded-full bg-brand-primary px-4 text-[12.5px] font-semibold text-txt-inverse disabled:opacity-60"
+                      className="mt-2.5 flex h-11 items-center rounded-full bg-brand-primary px-5 text-[14px] font-semibold text-txt-inverse disabled:opacity-60"
                     >
                       {recordatoriosEstado === "activando" ? "Activando…" : "Activar recordatorios"}
                     </button>

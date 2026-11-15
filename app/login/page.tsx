@@ -351,7 +351,7 @@ export default function LoginPage() {
                   setPassword(e.target.value);
                   setError(null);
                 }}
-                placeholder={esRegistro ? "Crea una contraseña" : "Tu contraseña"}
+                placeholder={esRegistro ? "Crea una contraseña (mín. 8)" : "Tu contraseña"}
                 className="w-full bg-transparent text-[14.5px] text-txt-primary outline-none placeholder:text-txt-tertiary"
               />
             </div>

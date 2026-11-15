@@ -192,7 +192,7 @@ export default function RetosPage() {
       <TopHeader titulo="Retos" />
 
       <div className="relative mt-2 px-4 pb-8">
-        <h1 className="sr-only">Retos EVA</h1>
+        <h1 className="font-display text-[22px] font-medium leading-[1.2] text-txt-primary">Tus retos de 7 días</h1>
         <p className="mt-1 text-[14px] text-txt-secondary">
           Microexperimentos de 7 días — no dietas. Descubre qué necesita tu cuerpo.
         </p>
@@ -251,7 +251,6 @@ function VistaRecomendacion({
 }) {
   const recomendado = recomendarReto(checkins);
   const otros = RETOS.filter((r) => r.slug !== recomendado.slug);
-  const [verOtros, setVerOtros] = useState(false);
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-5">
@@ -275,37 +274,48 @@ function VistaRecomendacion({
         </div>
       </div>
 
-      {otros.length > 0 && (
-        <div className="mt-3 text-center">
-          <button
-            type="button"
-            onClick={() => setVerOtros((v) => !v)}
-            className="text-[12.5px] font-medium text-txt-tertiary underline underline-offset-2"
-          >
-            {verOtros ? "Ocultar otras opciones" : "¿Prefieres otro reto? Ver otras opciones"}
-          </button>
-        </div>
-      )}
-
-      {verOtros && (
-        <div className="mt-3 space-y-2">
-          {otros.map((r) => (
-            <button
-              key={r.slug}
-              type="button"
-              disabled={procesando}
-              onClick={() => onEmpezar(r)}
-              className="flex w-full items-center justify-between rounded-xl border border-border-default/60 bg-surface-primary p-3.5 text-left shadow-sm"
-            >
-              <div className="flex items-center gap-2.5">
-                <RetoIcono slug={r.slug} tamano={32} />
-                <div>
-                  <p className="text-[13px] font-medium text-txt-primary">{r.nombre}</p>
-                  <p className="text-[12px] text-txt-tertiary">{FAMILIA_LABEL[r.familia]} · 7 días</p>
-                </div>
-              </div>
-            </button>
+      <div className="mt-4 rounded-2xl border border-border-default/40 bg-surface-primary p-4 shadow-sm">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">Cómo funciona un reto</p>
+        <ol className="mt-3 space-y-3">
+          {[
+            "Haces un cambio pequeño durante 7 días — no es una dieta.",
+            "Cada día marcas si lo cumpliste, en 10 segundos.",
+            "Al final comparamos cómo te sentías antes y después, y te decimos si te sirve.",
+          ].map((paso, i) => (
+            <li key={paso} className="flex items-start gap-2.5">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-primary text-[12px] font-bold text-txt-inverse">
+                {i + 1}
+              </span>
+              <span className="text-[14px] leading-relaxed text-txt-primary">{paso}</span>
+            </li>
           ))}
+        </ol>
+      </div>
+
+      {otros.length > 0 && (
+        <div className="mt-4">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
+            ¿Prefieres otro reto?
+          </p>
+          <div className="mt-2 space-y-2">
+            {otros.map((r) => (
+              <button
+                key={r.slug}
+                type="button"
+                disabled={procesando}
+                onClick={() => onEmpezar(r)}
+                className="flex min-h-[56px] w-full items-center rounded-xl border border-border-default/60 bg-surface-primary p-3.5 text-left shadow-sm"
+              >
+                <div className="flex items-center gap-2.5">
+                  <RetoIcono slug={r.slug} tamano={32} />
+                  <div>
+                    <p className="text-[14px] font-medium text-txt-primary">{r.nombre}</p>
+                    <p className="text-[13px] text-txt-tertiary">{FAMILIA_LABEL[r.familia]} · 7 días</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </motion.div>

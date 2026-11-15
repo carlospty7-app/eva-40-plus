@@ -191,7 +191,11 @@ export function insightsAutomaticos(checkins: Checkin[]): string[] {
   }
 
   if (insights.length === 0) {
-    insights.push("Sigue registrando tu check-in diario — en unos días te mostramos tus patrones.");
+    insights.push(
+      checkins.length >= 7
+        ? "Todavía no se ve un patrón claro entre tu sueño, tu estrés y cómo te sientes — con más días lo veremos mejor."
+        : "Sigue registrando tu check-in diario — en unos días te mostramos tus patrones.",
+    );
   }
 
   return insights;

@@ -103,7 +103,7 @@ export default function ListaDeComprasPage() {
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
-      <span className="font-display text-[17px] text-txt-primary">Lista de compras</span>
+      <span className="font-display text-[17px] text-txt-primary">Alimentos de tu semana</span>
     </div>
   );
 
@@ -128,7 +128,7 @@ export default function ListaDeComprasPage() {
         {encabezado}
         <div className="mt-10 flex flex-col items-center gap-3 text-center">
           <ShoppingBasket className="h-8 w-8 text-brand-primary" aria-hidden />
-          <h1 className="font-display text-[18px] font-medium text-txt-primary">Tu lista aún está vacía</h1>
+          <h1 className="font-display text-[18px] font-medium text-txt-primary">Aún no hay alimentos para tu semana</h1>
           <p className="max-w-[280px] text-[14px] text-txt-secondary">
             Aparece sola cuando tu ruta de la semana tiene alimentos recomendados. Haz tu revisión de hoy y
             vuelve.
@@ -152,7 +152,7 @@ export default function ListaDeComprasPage() {
       {encabezado}
 
       <p className="mt-3 text-[14px] text-txt-secondary">
-        Todo lo que necesitas para tu ruta de esta semana, junto en un solo lugar.
+        Lo que te recomendamos tener a la mano esta semana. Marca lo que ya tienes o lo que vas comprando.
       </p>
 
       <div className="mt-4 flex items-center gap-3">

@@ -380,7 +380,7 @@ export default function MiRutaPage() {
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-primary-soft text-brand-primary">
               <ShoppingBasket className="h-4 w-4" />
             </span>
-            <span className="text-[13.5px] font-medium text-txt-primary">Lista de compras de la semana</span>
+            <span className="text-[13.5px] font-medium text-txt-primary">Alimentos para tu semana</span>
           </div>
           <span className="text-[12px] font-semibold text-brand-primary">Ver →</span>
         </Link>

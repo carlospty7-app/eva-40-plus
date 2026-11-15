@@ -351,7 +351,7 @@ export default function CicloPage() {
           </button>
           {!peso && !cintura && (
             <p className="mt-1.5 text-center text-[12px] text-txt-tertiary">
-              Escribe tu peso o tu cintura para poder guardar.
+              Opcional: anota tu peso o tu cintura si quieres seguirlos.
             </p>
           )}
         </motion.div>
