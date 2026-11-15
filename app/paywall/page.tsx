@@ -60,7 +60,7 @@ function AnimatedScore({ value }: { value: number }) {
 
 export default function PaywallPage() {
   const router = useRouter();
-  const [plan, setPlan] = useState<"anual" | "mensual">("anual");
+  const [plan, setPlan] = useState<"anual" | "mensual">("mensual");
   const [data, setData] = useState<DiagnosticoGuardado>(FALLBACK);
   const [isPending, setIsPending] = useState(false);
   const [ctaPrincipalVisible, setCtaPrincipalVisible] = useState(false);
@@ -216,7 +216,7 @@ export default function PaywallPage() {
           }`}
         >
           <span className="absolute -top-2.5 left-4 rounded-full bg-brand-gold px-2.5 py-0.5 text-[10px] font-bold text-surface-dark-2">
-            MÁS POPULAR · AHORRA 34%
+            MEJOR VALOR · AHORRA 34%
           </span>
           <div className="flex items-center justify-between">
             <span className="text-[14px] font-semibold text-txt-primary">Anual</span>

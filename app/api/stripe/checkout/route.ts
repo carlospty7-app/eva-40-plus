@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     return new Response("Solicitud inválida", { status: 400 });
   }
 
-  const plan: PlanEva = body.plan === "mensual" ? "mensual" : "anual";
+  const plan: PlanEva = body.plan === "anual" ? "anual" : "mensual";
   const esOfertaGratis = body.oferta === "gratis";
 
   const origin = origenSeguro(req);

@@ -29,14 +29,14 @@ export default function LoginPage() {
   const [recuperarEnviado, setRecuperarEnviado] = useState(false);
   const [recuperarError, setRecuperarError] = useState<string | null>(null);
   const [recuperarLoading, setRecuperarLoading] = useState(false);
-  const [plan, setPlan] = useState<"anual" | "mensual">("anual");
+  const [plan, setPlan] = useState<"anual" | "mensual">("mensual");
   const [oferta, setOferta] = useState<"pagado" | "gratis">("pagado");
   const [errorPago, setErrorPago] = useState<string | null>(null);
   const [iniciandoPago, setIniciandoPago] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("plan") === "mensual") setPlan("mensual");
+    if (params.get("plan") === "anual") setPlan("anual");
     setOferta(leerOferta());
   }, []);
 
