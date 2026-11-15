@@ -1,6 +1,13 @@
 # ESTADO — EVA 40+
 Última actualización: 2026-09-15 (noche) | Sesión actual: 10 — Stripe Live + correos del negocio + doble oferta
 
+🚨 ABIERTO — 2026-11-15: DNS de `eva40.app` MAL en Namecheap (Advanced DNS): hay un 2º registro A →
+162.159.140.166 (HighLevel/Cloudflare, devuelve 404) junto al correcto 216.198.79.1 (Vercel), y `www` es CNAME →
+sites.ludicrous.cloud (HighLevel). Resultado: ~la mitad de las visitas (y de los avisos del webhook de Stripe) caen
+en un 404. Verificado: apuntando directo a 216.198.79.1 la app publicada (commit 42962aa) responde perfecto. FIX (lo
+hace el usuario): borrar el A 162.159.140.166 y poner `www` → CNAME `cname.vercel-dns.com`. Quien lo agregó
+probablemente fue un intento de conectar el dominio a HighLevel.
+
 ⏸️ CHECKPOINT — 2026-11-15 (noche): TODO lo recomendado por la auditoría 360° APLICADO y PUBLICADO a `main` (a pedido).
 Cuenta: botón "Administrar o cancelar mi suscripción" (`/api/stripe/portal`, probado en vivo: Stripe devuelve link
 válido), "Borrar mi cuenta" con confirmación (`/api/cuenta/eliminar`: cancela Stripe + borra foto + usuario, el resto
