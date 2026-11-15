@@ -44,16 +44,20 @@ async function aplicarSuscripcion(subscription: Stripe.Subscription) {
   const { activo, trialActivo } = accesoDesdeEstado(subscription.status);
   const finPeriodo = subscription.items.data[0]?.current_period_end;
 
-  await supabaseAdmin
+  const { error } = await supabaseAdmin
     .from("profiles")
     .update({
       stripe_subscription_id: subscription.id,
       plan,
       activo,
       trial_activo: trialActivo,
+      desactivado_en: activo ? null : new Date().toISOString(),
       ...(finPeriodo ? { fecha_cobro: new Date(finPeriodo * 1000).toISOString().slice(0, 10) } : {}),
     })
     .eq("id", userId);
+  // Si la base no se pudo actualizar, se propaga: el POST libera el evento y devuelve 500 para
+  // que Stripe lo reintente (en vez de dejar a una clienta que pagó sin acceso).
+  if (error) throw error;
 
   return { userId, plan };
 }
@@ -84,6 +88,19 @@ export async function POST(req: Request) {
     return new Response(null, { status: 200 });
   }
 
+  try {
+    await procesarEvento(stripe, event);
+  } catch (err) {
+    console.error("Error procesando el evento de Stripe", event.id, err);
+    // Se libera para que el reintento de Stripe sí se procese (si no, quedaría marcado como hecho).
+    await supabaseAdmin.from("webhook_events").delete().eq("id", event.id);
+    return new Response(null, { status: 500 });
+  }
+
+  return new Response(null, { status: 200 });
+}
+
+async function procesarEvento(stripe: Stripe, event: Stripe.Event) {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -150,6 +167,4 @@ export async function POST(req: Request) {
     default:
       break;
   }
-
-  return new Response(null, { status: 200 });
 }

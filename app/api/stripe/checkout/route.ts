@@ -5,6 +5,23 @@ export const runtime = "nodejs";
 
 type CuerpoCheckout = { plan?: string; oferta?: string };
 
+const ORIGEN_PRODUCCION = "https://eva40.app";
+
+/** Solo se aceptan orígenes propios (producción, previews de Vercel y localhost) — el header
+ * `Origin` lo controla quien llama, así que nunca se usa tal cual para armar las URLs de retorno. */
+function origenSeguro(req: Request): string {
+  const candidato = req.headers.get("origin") || new URL(req.url).origin;
+  try {
+    const { protocol, hostname, origin } = new URL(candidato);
+    const esLocal = hostname === "localhost" || hostname === "127.0.0.1";
+    const esPropio = hostname === "eva40.app" || hostname.endsWith(".vercel.app");
+    if ((protocol === "https:" && esPropio) || (protocol === "http:" && esLocal)) return origin;
+  } catch {
+    // cae al valor seguro de abajo
+  }
+  return ORIGEN_PRODUCCION;
+}
+
 /** Crea una sesión de pago de Stripe para la usuaria autenticada y devuelve la URL a la que hay
  * que redirigirla. Soporta 2 ofertas, controladas por `oferta` (viene del paywall vía `?oferta=`):
  * - "pagado" (por defecto): cobra $1 de una vez por los primeros 7 días de acceso (línea de precio
@@ -28,14 +45,17 @@ export async function POST(req: Request) {
   const plan: PlanEva = body.plan === "mensual" ? "mensual" : "anual";
   const esOfertaGratis = body.oferta === "gratis";
 
-  const origin = req.headers.get("origin") || new URL(req.url).origin;
+  const origin = origenSeguro(req);
   const stripe = crearClienteStripe();
 
   const { data: perfil } = await supabase
     .from("profiles")
-    .select("stripe_customer_id")
+    .select("stripe_customer_id, activo")
     .eq("id", user.id)
     .single();
+
+  // Ya tiene acceso activo: no se le abre otro cobro (evitaría una suscripción duplicada).
+  if (perfil?.activo === true) return Response.json({ ya_activa: true }, { status: 409 });
 
   let customerId = perfil?.stripe_customer_id as string | null | undefined;
   if (!customerId) {
@@ -60,7 +80,7 @@ export async function POST(req: Request) {
       metadata: { user_id: user.id, plan, oferta: esOfertaGratis ? "gratis" : "pagado" },
     },
     metadata: { user_id: user.id, plan },
-    success_url: `${origin}/app?checkout=success`,
+    success_url: `${origin}/activando`,
     cancel_url: `${origin}/paywall`,
   });
 

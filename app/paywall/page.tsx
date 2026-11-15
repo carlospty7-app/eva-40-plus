@@ -9,6 +9,7 @@ import { TapButton } from "@/components/app/onboarding/TapButton";
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
 import { Logo } from "@/components/app/ui/Logo";
 import { leerDiagnostico, type DiagnosticoGuardado } from "@/lib/onboarding/storage";
+import { crearClienteNavegador } from "@/lib/supabase/client";
 
 const FALLBACK: DiagnosticoGuardado = {
   score: 72,
@@ -89,9 +90,33 @@ export default function PaywallPage() {
     return () => observer.disconnect();
   }, []);
 
-  function irALogin() {
+  async function irALogin() {
     if (isPending) return;
     setIsPending(true);
+    // Si ya tiene sesión (creó la cuenta pero no completó el pago), va directo al checkout.
+    try {
+      const {
+        data: { user },
+      } = await crearClienteNavegador().auth.getUser();
+      if (user) {
+        const res = await fetch("/api/stripe/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan, oferta }),
+        });
+        if (res.status === 409) {
+          router.push("/app");
+          return;
+        }
+        const data = res.ok ? await res.json() : null;
+        if (data?.url) {
+          window.location.href = data.url;
+          return;
+        }
+      }
+    } catch {
+      // si algo falla, sigue el camino normal por el login
+    }
     router.push(`/login?plan=${plan}&oferta=${oferta}`);
   }
 

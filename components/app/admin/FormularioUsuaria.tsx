@@ -84,13 +84,13 @@ export function FormularioUsuaria() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           type="text"
-          placeholder="Contraseña temporal (mín. 6 caracteres)"
+          placeholder="Contraseña temporal (mín. 8 caracteres)"
           className="h-11 rounded-full border border-border-default bg-surface-base px-4 text-[13.5px] text-txt-primary outline-none placeholder:text-txt-tertiary"
         />
       </div>
       {error && <p className="mt-2 text-[12.5px] text-status-error">{error}</p>}
       <div className="mt-3">
-        <TapButton disabled={!nombre || !email || password.length < 6 || guardando} onClick={guardar}>
+        <TapButton disabled={!nombre || !email || password.length < 8 || guardando} onClick={guardar}>
           {guardando ? "Creando…" : "Crear cuenta"}
         </TapButton>
       </div>

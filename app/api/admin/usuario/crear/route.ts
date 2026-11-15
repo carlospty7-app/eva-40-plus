@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   const plan = body.plan === "mensual" ? "mensual" : "anual";
 
   if (!EMAIL_RE.test(email)) return new Response("Correo inválido", { status: 400 });
-  if (password.length < 6) return new Response("La contraseña necesita al menos 6 caracteres", { status: 400 });
+  if (password.length < 8) return new Response("La contraseña necesita al menos 8 caracteres", { status: 400 });
 
   const admin = crearClienteAdmin();
   const { data: creado, error: errorCrear } = await admin.auth.admin.createUser({
@@ -47,12 +47,12 @@ export async function POST(req: Request) {
     return new Response(errorCrear?.message || "No se pudo crear la cuenta", { status: 400 });
   }
 
-  if (nombre || plan) {
-    await admin
-      .from("profiles")
-      .update({ ...(nombre ? { nombre } : {}), plan, trial_activo: false })
-      .eq("id", creado.user.id);
-  }
+  // Las cuentas nacen inactivas (acceso solo tras pagar); una alta manual del panel es justamente
+  // el caso "pagó por fuera", así que se activa de forma explícita.
+  await admin
+    .from("profiles")
+    .update({ ...(nombre ? { nombre } : {}), plan, trial_activo: false, activo: true })
+    .eq("id", creado.user.id);
 
   return new Response(null, { status: 204 });
 }

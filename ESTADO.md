@@ -1,6 +1,36 @@
 # ESTADO — EVA 40+
 Última actualización: 2026-09-15 (noche) | Sesión actual: 10 — Stripe Live + correos del negocio + doble oferta
 
+⏸️ CHECKPOINT — 2026-11-14 (noche): TODO lo de la auditoría CORREGIDO y probado en local con cuentas desechables.
+BASE (migración `seguridad_acceso_perfiles_y_encuesta`, YA APLICADA EN LA BASE REAL, o sea ya afecta producción):
+`profiles.activo/trial_activo` nacen en `false`; `authenticated` solo puede editar sus datos personales (nombre, foto,
+email, metas, racha, flags de salud) — NO activo/plan/stripe; se quitó la lectura de `survey_responses`.
+CÓDIGO (en `desarrollo`, commit pendiente de merge a `main`): `proxy.ts` exige `activo===true` para /app (sin pago →
+/paywall; con suscripción previa → /cuenta-desactivada); nueva `/activando` (espera al webhook y entra a /app);
+checkout con URL de retorno segura, 409 si ya está activa; login/paywall llevan al checkout a quien tiene cuenta
+sin pagar; `/api/eva` exige sesión + activo + tope 60/día; cron falla cerrado; webhook libera el evento y devuelve
+500 si falla (Stripe reintenta) y lanza error si la base no se actualiza; alta manual de admin activa la cuenta;
+contraseña mínima 8; cabeceras (CSP, HSTS, X-Frame-Options, etc.) en `next.config.ts`; Next 16.4.6 + `npm audit fix`
+(prod: 0 vulnerabilidades). PENDIENTE: merge a `main`; en Supabase Dashboard activar "Leaked password protection" y
+subir "Minimum password length" a 8 (puede requerir plan Pro); decidir si un reembolso debe cortar el acceso.
+⚠️ Mientras `main` no tenga este código, una compra nueva en producción rebota unos segundos a /cuenta-desactivada.
+
+⏸️ CHECKPOINT — 2026-11-14: AUDITORÍA DE SEGURIDAD hecha (hallazgos; ver arriba lo ya corregido).
+CRÍTICO (probado con cuenta desechable): (1) `profiles.activo` nace en `true` y `proxy.ts` solo bloquea si es
+`false` → cualquiera que cree cuenta entra a /app SIN pagar (el checkout es solo una redirección desde login);
+(2) `authenticated` tiene UPDATE en TODAS las columnas de `profiles` → una usuaria se pone `activo/plan/trial` sola;
+(3) next@16.2.12 con advisory crítico (parchear a 16.4.6 + `npm audit fix`). IMPORTANTE: `/api/eva` sin login (gasto
+de Anthropic abierto, límite en memoria); cron acepta "Bearer undefined" si falta CRON_SECRET; `survey_responses`
+legible (nombre+whatsapp) por cualquier usuaria logueada; webhook marca el evento como procesado ANTES de procesar
+(si falla a medias, el reintento se ignora); sin cabeceras de seguridad/CSP. PULIDO: leaked-password-protection off,
+contraseña mínima 6, checkout usa header Origin y no evita doble suscripción. BIEN: .env nunca en git, RLS en 14 tablas,
+firma de webhook, guard de admin, sin CORS abierto. Orden propuesto: arreglar 1+2 → resto → recién ahí el pago real de $1.
+
+⏸️ CHECKPOINT — 2026-10-06: buzón `hola@eva40.app` funcionando. Recibir: reenvío gratis de Namecheap
+(Domain → Redirect Email: hola → Gmail del usuario). Responder: Gmail "Enviar como" vía SMTP de Resend
+(smtp.resend.com:465, usuario `resend`, clave de Resend creada aparte, solo guardada en Gmail). Probado
+en ambos sentidos. La oferta `?oferta=gratis` ya está en producción (commit 938a068).
+
 ⏸️ CHECKPOINT — 2026-09-15 (noche): nueva función terminada de construir esta sesión — **soporte para
 2 ofertas de precio al mismo tiempo**, a pedido del usuario ("a veces queremos $1 por 7 días estilo
 Tony Robbins, a veces 7 días totalmente gratis — ¿se pueden tener las dos?"). Se eligió la opción
@@ -988,6 +1018,22 @@ Se descartaron explícitamente 2 ideas del mismo research por violar reglas del 
 ## Pendientes del usuario (acciones que el usuario debe hacer)
 - [ ] Confirmar FICHA-AVATAR.md tal como está, o pedir ajustes — el copy de venta ya se construyó sobre ella
 - [ ] Más adelante (no ahora): crear cuentas de Hotmart, Supabase y Vercel, comprar el dominio, pegar un par de claves — se le avisará cuándo y se le guiará paso a paso
+
+## Landing del evento presencial EVA Experience (2026-10-04)
+- Sitio estático aparte (HTML+CSS+JS, GSAP local, sin build) en `LANZAMIENTO WEBSITE/landing/` — se sube tal cual a Hostinger/Netlify. Look del flyer (crema + oliva, logo recortado del flyer). Sin info de patrocinadores.
+- Datos del evento: 14 nov 2026 (sábado), Auditorio Consultorios Town Center, Costa del Este; 2 sesiones de 2 h; 85 cupos por sesión. Reserva = formulario que abre WhatsApp con mensaje listo.
+- revisor-visual: 28/40 · 14/20 · copy 13/20 · fidelidad FIEL → NO LISTA hasta completar los datos que faltan (abajo). Ya corregidos: números oldstyle, inglés crudo, copy "grupos de 85", espacios. Capturas en `LANZAMIENTO WEBSITE/capturas-revision/`.
+- Confirmado por el usuario (2026-10-05): entrada GRATUITA, cupos limitados, UNA sola sesión a las 10:00 a.m. (85 lugares). Se quitó la 2ª sesión y el selector de sesión del formulario.
+- Formulario (2026-10-06): nombre, apellido, correo, WhatsApp → POST JSON al Inbound Webhook de GoHighLevel (`GHL_WEBHOOK_URL` en `landing/main.js`; campos first_name, last_name, email, phone +507…, evento, fuente) → redirige a `landing/gracias.html` (rediseñada 2026-10-07 con el mismo look de la landing: hero con foto en arco, cuenta regresiva, marquee, detalles, 3 pasos, cita, invitar amiga; botón de grupo de WhatsApp se activa al llenar `WHATSAPP_GRUPO_URL` en `landing/main.js`). Ya no se usa número de WhatsApp en la página. Se envió 1 registro de prueba (Prueba EVA, prueba@eva40.app) para el mapping.
+- Grupo WhatsApp conectado (2026-10-07): https://chat.whatsapp.com/Ll8MtjS74ks4osXnkeZNUC (botón "Entrar al grupo" en gracias.html). Página de gracias simplificada (gracias + guarda la fecha + entrar al grupo + calendario + invitar amiga). Fotos de grupo en `LANZAMIENTO WEBSITE/foto-grupo-whatsapp/`.
+- Publicado en Vercel (2026-10-07): proyecto `eva-experience` (team eva-team-app), https://eva-experience.vercel.app. Dominio **https://evento.eva40.app** ACTIVO con SSL (CNAME `evento` → `5834771c628c77db.vercel-dns-017.com.` en Namecheap). Redeploy: `cd "LANZAMIENTO WEBSITE/landing" && npx vercel deploy --prod --scope eva-team-app`.
+- CAMBIO 2026-10-19 (terremoto en Panamá): el evento pasa a ONLINE por Zoom, domingo 15 nov 2026 10:00 a.m. (hora Panamá), gratis, espacios limitados (sin número). Se quitó todo lo presencial (Town Center, 85 cupos, 2 horas, bolsa de regalo). El enlace de Zoom se comparte por el grupo de WhatsApp. Payload GHL: evento="EVA Experience online 15 nov 2026", lugar="Online por Zoom". Disco C: lleno → deploy con `npm_config_cache`/`TEMP` en H:.
+- 2026-11-13: presentación ampliada a 26 diapositivas (Tema 1 con 6: qué es, detonantes, qué pasa por dentro, señales/por qué no se adivina, plato, ayuno; + ¿Peri o meno? y Descifrando síntomas en Tema 2). Regla: contenido gratis sin cantidades/recetas/protocolos (eso lo da la app). La Guía completa es de Susie Dávila (Maru la aprobó como material); la credencial "Health Coach certificada" es de Susie, NO de Maru.
+- 2026-11-13: presentación ahora con 32 diapositivas: + 2 diagramas de Maru tras "La inflamación no es gordura" (diap. 5-6) y + 4 diapositivas tras "Qué incluye" (diap. 23-26) que explican cada función de la app (qué es, cómo te ayuda, frase de alivio). Foto de Mirelis = diap. 17; capturas = diap. 27.
+- 2026-11-12: presentación del en vivo (21 diapositivas, PPTX editable + PDF) en `LANZAMIENTO WEBSITE/guion-evento/EVA-Experience-Presentacion.*` y copia en Descargas. Temas 1 y 2 con contenido de la Guía de Peri y Menopausia MH + Guía completa perimenopausia (el ebook "Controla la Perimenopausia" es de otra marca/MENOPLAY: solo datos generales). Fuentes Georgia + Calibri (las de marca no están instaladas). Pendiente: foto de Mirelis (diap. 10) y 3 capturas (diap. 16).
+- 2026-11-10: guion del en vivo (60 min) + diapositivas + mensajes antes/después en `LANZAMIENTO WEBSITE/guion-evento/guion-eva-experience.md`. Oferta: app EVA $1 x 7 días (luego $9.99/mes o $79/año) + bono sesión GRUPAL de onboarding de 30 min con Maru el jueves 19 nov a las 7:00 p.m.; modera el chat Carlos Santamaría hasta mié 18 nov 11:59 p.m. Invitada: Mirelis Espinosa (celíaca, intolerancias). Grabación hasta mar 17. Skills instalados: webinar-script (memstack) y launch-formula (clawfu) en ~/.claude/skills.
+- 2026-10-25: 3 flyers de historias (1080x1920) para invitar al evento online, en `LANZAMIENTO WEBSITE/flyers-historias/` (eva-historia-1/2/3.png + flyers.html editable, ?f=1/2/3). Dolores: inflamación matutina / báscula que no baja / "mi cuerpo cambió". Zonas seguras de IG respetadas (210 arriba, 290 abajo).
+- [ ] PENDIENTE DEL USUARIO: actualizar el correo de confirmación de GHL al formato online; en GHL terminar el workflow (Fetch sample → Create Contact → mensaje automático → Publish) y borrar el contacto de prueba; 2-3 testimonios reales.
 
 ## Decisión de alcance (2026-07-27)
 - El usuario preguntó si la app da "al menos una ruta alimenticia semanal". Se decidió (DECIDE-INFORMA-AVANZA, consistente con la promesa ya validada) que **Mi Ruta muestra las 7 prioridades del avatar en un anillo alimenticio de la semana** (Mi Ruta tiene una tira L-D, cada día con un enfoque de alimentación derivado de las 3 prioridades — no un recetario). Se ajustó el mockup de la landing ("La app por dentro") para reflejarlo. Se construye de verdad en la Sesión 5 (app interna).

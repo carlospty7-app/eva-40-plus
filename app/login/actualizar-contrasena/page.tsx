@@ -30,8 +30,8 @@ export default function ActualizarContrasenaPage() {
   }, []);
 
   async function guardar() {
-    if (password.length < 6) {
-      setError("Tu contraseña necesita al menos 6 caracteres.");
+    if (password.length < 8) {
+      setError("Tu contraseña necesita al menos 8 caracteres.");
       return;
     }
     if (password !== confirmar) {
@@ -105,7 +105,7 @@ export default function ActualizarContrasenaPage() {
       <Logo height={40} />
       <div className="mt-8 w-full max-w-[300px]">
         <h1 className="font-display text-[20px] font-medium text-txt-primary">Crea una contraseña nueva</h1>
-        <p className="mt-1.5 text-[13.5px] text-txt-secondary">Mínimo 6 caracteres.</p>
+        <p className="mt-1.5 text-[13.5px] text-txt-secondary">Mínimo 8 caracteres.</p>
 
         <div className="mt-5 space-y-3">
           <div className="flex h-[52px] items-center gap-2.5 rounded-full border border-border-default bg-surface-primary px-5">

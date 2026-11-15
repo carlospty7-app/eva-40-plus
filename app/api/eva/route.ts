@@ -20,6 +20,7 @@ const MAX_MENSAJE_CHARS = 800;
 const MAX_NOTAS_CHARS = 500;
 const LIMITE_VENTANA_MS = 5 * 60 * 1000; // 5 minutos
 const LIMITE_REQUESTS = 20; // por IP, por ventana
+const LIMITE_DIARIO_POR_USUARIA = 60; // mensajes a EVA por usuaria por día (tope de costo)
 
 // Freno de abuso mientras no hay sesión/plan real (Supabase pendiente) — vive en memoria del
 // proceso, así que no es a prueba de balas en serverless (se resetea en cold start / no se
@@ -63,13 +64,35 @@ export async function POST(req: Request) {
     return new Response("Tus notas de hoy son demasiado largas.", { status: 400 });
   }
 
+  if (mensajes.some((m) => (m.role !== "user" && m.role !== "assistant") || typeof m.content !== "string")) {
+    return new Response("Solicitud inválida", { status: 400 });
+  }
+
   const ultimos = mensajes.slice(-12);
   const modelo = process.env.AI_MODEL || "claude-haiku-4-5";
 
+  // Solo usuarias con sesión y acceso activo gastan IA (cada llamada cuesta dinero real).
   const supabaseUsuario = await crearClienteServidor();
   const {
     data: { user },
   } = await supabaseUsuario.auth.getUser();
+  if (!user) return new Response("Inicia sesión para hablar con EVA.", { status: 401 });
+
+  const { data: perfilAcceso } = await supabaseUsuario.from("profiles").select("activo").eq("id", user.id).single();
+  if (perfilAcceso?.activo !== true) {
+    return new Response("Tu acceso no está activo.", { status: 403 });
+  }
+
+  const inicioDia = new Date();
+  inicioDia.setUTCHours(0, 0, 0, 0);
+  const { count: llamadasHoy } = await crearClienteAdmin()
+    .from("ai_calls")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .gte("created_at", inicioDia.toISOString());
+  if ((llamadasHoy ?? 0) >= LIMITE_DIARIO_POR_USUARIA) {
+    return new Response("Llegaste al límite de mensajes de hoy — vuelve mañana y seguimos.", { status: 429 });
+  }
 
   // Se pide server-side (con la sesión real, no lo que mande el cliente) para que EVA "recuerde"
   // de verdad los últimos días — así no depende de que el cliente lo mande bien, y RLS garantiza

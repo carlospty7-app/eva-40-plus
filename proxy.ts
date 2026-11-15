@@ -44,10 +44,17 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user && request.nextUrl.pathname.startsWith("/app")) {
-    const { data: perfil } = await supabase.from("profiles").select("activo").eq("id", user.id).single();
-    if (perfil && perfil.activo === false) {
+    const { data: perfil } = await supabase
+      .from("profiles")
+      .select("activo, stripe_subscription_id")
+      .eq("id", user.id)
+      .single();
+    // Fail-secure: solo entra quien tiene `activo === true` (lo pone el webhook de Stripe al pagar,
+    // o el panel de admin). Sin perfil o sin pago → paywall; con suscripción previa → desactivada.
+    if (!perfil || perfil.activo !== true) {
       const url = request.nextUrl.clone();
-      url.pathname = "/cuenta-desactivada";
+      url.search = "";
+      url.pathname = perfil?.stripe_subscription_id ? "/cuenta-desactivada" : "/paywall";
       return NextResponse.redirect(url);
     }
   }

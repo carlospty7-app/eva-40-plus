@@ -49,6 +49,10 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan, oferta }),
       });
+      if (res.status === 409) {
+        router.push("/app");
+        return;
+      }
       if (!res.ok) throw new Error("checkout_failed");
       const data = await res.json();
       if (!data.url) throw new Error("checkout_failed");
@@ -81,8 +85,8 @@ export default function LoginPage() {
       setError("Ese correo no parece válido — revisa que esté bien escrito.");
       return;
     }
-    if (password.length < 6) {
-      setError("Tu contraseña necesita al menos 6 caracteres.");
+    if (password.length < 8) {
+      setError("Tu contraseña necesita al menos 8 caracteres.");
       return;
     }
     setError(null);
@@ -97,7 +101,18 @@ export default function LoginPage() {
     const { data: dataSignIn, error: errSignIn } = await supabase.auth.signInWithPassword({ email, password });
 
     if (dataSignIn.session) {
-      // Cuenta ya existente que inicia sesión de nuevo — nunca debe volver a pasar por el pago.
+      // Cuenta ya existente: si ya pagó, entra directo; si creó la cuenta pero nunca completó el
+      // pago, se le vuelve a abrir el checkout (sin pago activo, /app la devolvería al paywall).
+      const { data: perfilExistente } = await supabase
+        .from("profiles")
+        .select("activo, stripe_subscription_id")
+        .eq("id", dataSignIn.user.id)
+        .single();
+      if (perfilExistente?.activo !== true && !perfilExistente?.stripe_subscription_id) {
+        setCuentaCreada(true);
+        setLoading(false);
+        return;
+      }
       router.push("/app");
       return;
     }

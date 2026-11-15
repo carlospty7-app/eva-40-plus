@@ -17,8 +17,9 @@ const PRECIO_PLAN: Record<string, string> = { anual: "$79", mensual: "$9.99" };
  * 3) Le manda UN correo de activación a quien se registró AYER y todavía no hizo ni una sola
  *    revisión — nunca más de uno (se manda solo el día siguiente al registro, no se repite). */
 export async function GET(req: Request) {
-  const auth = req.headers.get("authorization");
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Fail-secure: sin CRON_SECRET configurado nadie entra (antes "Bearer undefined" habría pasado).
+  const secreto = process.env.CRON_SECRET;
+  if (!secreto || req.headers.get("authorization") !== `Bearer ${secreto}`) {
     return new Response(null, { status: 401 });
   }
 
