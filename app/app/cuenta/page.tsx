@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
 import { CargandoOError } from "@/components/app/ui/CargandoOError";
+import { InstalarApp } from "@/components/app/interna/InstalarApp";
 import { formatoCorto } from "@/lib/app/dates";
 import { crearClienteNavegador } from "@/lib/supabase/client";
 import {
@@ -257,6 +258,8 @@ export default function CuentaPage() {
             </button>
             {avisoPlan && <p className="mt-2 text-[13px] text-status-warning">{avisoPlan}</p>}
           </div>
+
+          <InstalarApp />
 
           <div className="mt-4 divide-y divide-border-default/60 rounded-xl border border-border-default/60 bg-surface-primary shadow-sm">
             <div className="p-4">
