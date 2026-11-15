@@ -13,7 +13,7 @@ export function GraficoCheckins({ porDia, porMes }: { porDia: PuntoSerie[]; porM
     <div className="rounded-xl border border-border-default/60 bg-surface-primary p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">
             Check-ins registrados
           </p>
           <p className="mt-0.5 text-[12px] text-txt-secondary">

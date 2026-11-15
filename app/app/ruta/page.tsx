@@ -24,6 +24,8 @@ import type { LucideIcon } from "lucide-react";
 import type { MovimientoDia } from "@/lib/app/types";
 import { AnimatedCounter } from "@/components/app/interna/AnimatedCounter";
 import { TopHeader } from "@/components/app/interna/TopHeader";
+import { CargandoOError } from "@/components/app/ui/CargandoOError";
+import { VideoConPoster } from "@/components/app/interna/VideoConPoster";
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
 import { BibliotecaYoga } from "@/components/app/interna/BibliotecaYoga";
 import { MenuDelDiaReto, MovimientoDelReto } from "@/components/app/interna/RetoWidgets";
@@ -83,9 +85,13 @@ export default function MiRutaPage() {
     return (
       <div className="relative min-h-dvh">
         <TopHeader titulo="Mi Ruta" />
-        <div className="mt-6 space-y-3 px-4">
-          <div className="h-16 animate-pulse rounded-xl bg-surface-tertiary/50" />
-          <div className="h-56 animate-pulse rounded-xl bg-surface-tertiary/50" />
+        <div className="px-4">
+          <CargandoOError>
+            <div className="mt-6 space-y-3">
+              <div className="h-16 animate-pulse rounded-xl bg-surface-tertiary/50" />
+              <div className="h-56 animate-pulse rounded-xl bg-surface-tertiary/50" />
+            </div>
+          </CargandoOError>
         </div>
       </div>
     );
@@ -168,7 +174,7 @@ export default function MiRutaPage() {
                 >
                   {d.completado ? <Check className="h-4 w-4" strokeWidth={3} /> : d.dia}
                 </span>
-                <span className={`text-[10px] font-medium ${activo ? "text-brand-primary" : "text-txt-tertiary"}`}>
+                <span className={`text-[12px] font-medium ${activo ? "text-brand-primary" : "text-txt-tertiary"}`}>
                   {d.dia}
                 </span>
               </motion.button>
@@ -183,7 +189,7 @@ export default function MiRutaPage() {
           transition={{ duration: 0.25 }}
           className="relative mt-5 overflow-hidden rounded-2xl border border-border-default/40 bg-gradient-to-br from-surface-primary via-surface-primary to-brand-primary-soft/70 p-4 shadow-md"
         >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
             {nombreDia(dia.dia)} {esHoy ? "· Hoy" : esFuturo ? "· Por revelar" : ""}
           </p>
           <p className="mt-1.5 font-display text-[18px] font-medium leading-snug text-txt-primary">
@@ -196,7 +202,7 @@ export default function MiRutaPage() {
               className="mt-2.5 flex items-center gap-2 rounded-xl bg-brand-primary-soft/70 p-2.5 text-[12px] font-medium text-brand-primary"
             >
               <Trophy className="h-3.5 w-3.5 shrink-0" />
-              Estás en tu reto: {retoDelDia.emoji} {retoDelDia.nombre} · Día {diaDelReto} de {retoDelDia.duracionDias}
+              Estás en tu reto: {retoDelDia.nombre} · Día {diaDelReto} de {retoDelDia.duracionDias}
               <span className="ml-auto">Ver reto →</span>
             </Link>
           )}
@@ -205,7 +211,7 @@ export default function MiRutaPage() {
             <div className="mt-4 flex flex-col items-center gap-3 rounded-xl bg-surface-tertiary/50 px-4 py-7 text-center">
               <Lock className="h-5 w-5 text-txt-tertiary" />
               <div>
-                <p className="text-[12.5px] font-medium text-txt-secondary">
+                <p className="text-[13px] font-medium text-txt-secondary">
                   Se desbloquea el {nombreDia(dia.dia)}
                 </p>
                 <p className="mt-1 text-[12px] text-txt-tertiary">
@@ -224,7 +230,7 @@ export default function MiRutaPage() {
               <div className="mt-4 flex items-start gap-2.5 rounded-lg bg-brand-primary-soft p-3">
                 <Target className="h-4 w-4 shrink-0 text-brand-primary" />
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-brand-primary">
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-brand-primary">
                     {dentroDelReto && retoDelDia ? "Tu misión del reto" : "Hábito prioritario"}
                   </p>
                   <p className="mt-0.5 text-[13.5px] font-medium text-txt-primary">
@@ -233,10 +239,21 @@ export default function MiRutaPage() {
                 </div>
               </div>
 
+              {esHoy && !dia.completado && (
+                <motion.div whileTap={{ scale: 0.98 }} className="mt-4">
+                  <Link
+                    href="/app"
+                    className="flex h-11 w-full items-center justify-center rounded-full bg-brand-primary text-[14px] font-semibold text-txt-inverse"
+                  >
+                    Hacer tu revisión de hoy
+                  </Link>
+                </motion.div>
+              )}
+
               {!menuDelReto && (
                 <>
                   <div className="mt-4 rounded-xl bg-brand-primary-soft/70 p-3">
-                    <p className="flex items-center gap-2 text-[12.5px] font-semibold text-brand-primary">
+                    <p className="flex items-center gap-2 text-[13px] font-semibold text-brand-primary">
                       <Utensils className="h-4 w-4" /> Alimentos recomendados
                     </p>
                     <ul className="mt-2 space-y-1.5">
@@ -249,14 +266,14 @@ export default function MiRutaPage() {
                     </ul>
                   </div>
 
-                  <div className="mt-3 rounded-xl bg-status-error-soft/70 p-3">
-                    <p className="flex items-center gap-2 text-[12.5px] font-semibold text-status-error">
+                  <div className="mt-3 rounded-xl bg-surface-tertiary/60 p-3">
+                    <p className="flex items-center gap-2 text-[13px] font-semibold text-txt-secondary">
                       <Ban className="h-4 w-4" /> Alimentos a limitar
                     </p>
                     <ul className="mt-2 space-y-1.5">
                       {dia.alimentosLimitar.map((a) => (
                         <li key={a} className="flex items-center gap-2 text-[13px] text-txt-secondary">
-                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-status-error" />
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-txt-tertiary" />
                           {a}
                         </li>
                       ))}
@@ -265,23 +282,13 @@ export default function MiRutaPage() {
                 </>
               )}
 
-              {esHoy && !dia.completado && (
-                <motion.div whileTap={{ scale: 0.98 }} className="mt-4">
-                  <Link
-                    href="/app"
-                    className="flex h-11 w-full items-center justify-center rounded-full bg-brand-primary text-[14px] font-semibold text-txt-inverse"
-                  >
-                    Hacer tu revisión de hoy
-                  </Link>
-                </motion.div>
-              )}
               {dia.completado && (
-                <p className="mt-4 flex items-center gap-1.5 text-[12.5px] font-medium text-brand-primary">
+                <p className="mt-4 flex items-center gap-1.5 text-[13px] font-medium text-brand-primary">
                   <Check className="h-3.5 w-3.5" strokeWidth={3} /> Día completado
                 </p>
               )}
               {perdidoSeleccionado && (
-                <p className="mt-4 text-[12.5px] font-medium text-status-warning">
+                <p className="mt-4 text-[13px] font-medium text-status-warning">
                   Este día pasó sin revisión — no pasa nada, sigamos con la de hoy.
                 </p>
               )}
@@ -303,12 +310,12 @@ export default function MiRutaPage() {
             transition={{ delay: 0.1 }}
             className="mt-4 rounded-2xl border border-border-default/40 bg-surface-primary p-4 shadow-md"
           >
-            <p className="flex items-center gap-2 text-[12.5px] font-semibold text-txt-primary">
+            <p className="flex items-center gap-2 text-[13px] font-semibold text-txt-primary">
               <UtensilsCrossed className="h-4 w-4 text-brand-primary" /> Menú del día
             </p>
             <ul className="mt-3 space-y-2.5">
-              <li className="flex items-center gap-3 rounded-xl bg-brand-gold/12 p-2.5 text-[13px] text-txt-secondary">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-gold/25 text-txt-primary">
+              <li className="flex items-center gap-3 rounded-xl bg-brand-primary-soft/60 p-2.5 text-[13px] text-txt-secondary">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-primary-soft text-brand-primary">
                   <Coffee className="h-4 w-4" />
                 </span>
                 <span><span className="font-medium text-txt-primary">Desayuno:</span> {dia.menu.desayuno}</span>
@@ -319,8 +326,8 @@ export default function MiRutaPage() {
                 </span>
                 <span><span className="font-medium text-txt-primary">Almuerzo:</span> {dia.menu.almuerzo}</span>
               </li>
-              <li className="flex items-center gap-3 rounded-xl bg-brand-secondary/12 p-2.5 text-[13px] text-txt-secondary">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-secondary/20 text-brand-secondary">
+              <li className="flex items-center gap-3 rounded-xl bg-brand-primary-soft/60 p-2.5 text-[13px] text-txt-secondary">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-primary-soft text-brand-primary">
                   <Utensils className="h-4 w-4" />
                 </span>
                 <span><span className="font-medium text-txt-primary">Cena:</span> {dia.menu.cena}</span>
@@ -335,27 +342,23 @@ export default function MiRutaPage() {
                 })()}
               </span>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">
                   Movimiento del día · {dia.movimiento.duracionMin} min · por Maru
                 </p>
                 <p className="mt-0.5 text-[13.5px] font-medium text-txt-primary">{dia.movimiento.titulo}</p>
                 {dia.movimiento.videoUrl && esArchivoDeVideo(dia.movimiento.videoUrl) ? (
-                  <video
-                    key={dia.movimiento.videoUrl}
-                    controls
-                    playsInline
-                    preload="metadata"
-                    className="mt-2.5 w-full rounded-lg bg-surface-tertiary"
-                  >
-                    <source src={dia.movimiento.videoUrl} type="video/mp4" />
-                  </video>
+                  <VideoConPoster
+                    src={dia.movimiento.videoUrl}
+                    titulo={dia.movimiento.titulo}
+                    duracion={`${dia.movimiento.duracionMin} min`}
+                  />
                 ) : (
                   dia.movimiento.videoUrl && (
                     <a
                       href={dia.movimiento.videoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-2 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-brand-primary"
+                      className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-brand-primary"
                     >
                       <PlayCircle className="h-4 w-4" />
                       Ver rutina en video
@@ -392,7 +395,7 @@ export default function MiRutaPage() {
             <Flame className="h-5 w-5" />
           </span>
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
               Tu racha
             </p>
             <p className="mt-0.5 text-[13.5px] font-medium text-txt-primary">

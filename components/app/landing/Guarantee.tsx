@@ -14,7 +14,8 @@ export function Guarantee() {
           </p>
           <p className="mt-3 max-w-[42ch] text-[14px] leading-relaxed text-txt-secondary">
             Si en 7 días tu Score Metabólico y tu primera Ruta no te hacen sentido, te
-            devolvemos el 100% de tu dinero. Un correo, sin preguntas, sin formularios.
+            devolvemos el 100% de lo que hayas pagado. Un correo a hola@eva40.app, sin preguntas,
+            sin formularios.
           </p>
           <p className="mt-3 text-[12.5px] text-txt-tertiary">
             Pago procesado de forma segura por Stripe.

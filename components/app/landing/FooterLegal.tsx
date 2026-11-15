@@ -25,7 +25,7 @@ export function FooterLegal() {
         <p className="mt-4 text-[12px] text-txt-tertiary">
           Soporte: <a href="mailto:hola@eva40.app" className="hover:text-brand-primary">hola@eva40.app</a>
         </p>
-        <p className="mt-2 text-[11.5px] text-txt-tertiary">
+        <p className="mt-2 text-[12px] text-txt-tertiary">
           © {new Date().getFullYear()} MaruHealthy. EVA 40+ ofrece orientación de bienestar y no
           reemplaza consejo médico profesional.
         </p>

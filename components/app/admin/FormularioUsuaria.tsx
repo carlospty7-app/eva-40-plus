@@ -94,7 +94,7 @@ export function FormularioUsuaria() {
           {guardando ? "Creando…" : "Crear cuenta"}
         </TapButton>
       </div>
-      <p className="mt-2 text-[11.5px] text-txt-tertiary">
+      <p className="mt-2 text-[12px] text-txt-tertiary">
         Comparte el correo y la contraseña con ella para que inicie sesión — no se envía ningún
         correo automático.
       </p>

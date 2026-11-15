@@ -34,7 +34,7 @@ export function DatoHeroe({
     <div className="relative rounded-xl border border-border-default/60 bg-surface-primary p-4 shadow-sm">
       <span className={`absolute inset-x-0 top-0 h-[3px] rounded-t-xl ${paleta.barra}`} aria-hidden />
       <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">
+        <div className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">
           {label}
           {info && <InfoTooltip texto={info} />}
         </div>

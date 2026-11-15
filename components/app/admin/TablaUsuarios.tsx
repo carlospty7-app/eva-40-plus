@@ -46,7 +46,7 @@ function InterruptorActivo({ userId, activo }: { userId: string; activo: boolean
           }`}
         />
       </span>
-      <span className={`text-[11.5px] font-medium ${valor ? "text-status-success" : "text-txt-tertiary"}`}>
+      <span className={`text-[12px] font-medium ${valor ? "text-status-success" : "text-txt-tertiary"}`}>
         {valor ? "Activa" : "Desactivada"}
       </span>
     </button>
@@ -89,7 +89,7 @@ export function TablaUsuarios({ usuarios }: { usuarios: UsuarioAdmin[] }) {
         <div className="mt-3 overflow-x-auto rounded-xl border border-border-default/60">
           <table className="w-full min-w-[760px] border-collapse text-left text-[13px]">
             <thead>
-              <tr className="border-b border-border-default/60 bg-surface-secondary/60 text-[11px] uppercase tracking-[0.05em] text-txt-tertiary">
+              <tr className="border-b border-border-default/60 bg-surface-secondary/60 text-[12px] uppercase tracking-[0.05em] text-txt-tertiary">
                 <th className="px-3.5 py-2.5 font-semibold">Usuaria</th>
                 <th className="px-3.5 py-2.5 font-semibold">Plan</th>
                 <th className="px-3.5 py-2.5 font-semibold">Racha</th>
@@ -108,7 +108,7 @@ export function TablaUsuarios({ usuarios }: { usuarios: UsuarioAdmin[] }) {
                   <td className="px-3.5 py-2.5 text-txt-secondary">
                     {u.plan === "anual" ? "Anual" : "Mensual"}
                     {u.trialActivo && (
-                      <span className="ml-1.5 rounded-full bg-brand-primary-soft px-2 py-0.5 text-[10.5px] font-medium text-brand-primary">
+                      <span className="ml-1.5 rounded-full bg-brand-primary-soft px-2 py-0.5 text-[12px] font-medium text-brand-primary">
                         prueba
                       </span>
                     )}

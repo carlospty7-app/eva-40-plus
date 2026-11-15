@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { HeartHandshake } from "lucide-react";
+import { Check, HeartHandshake } from "lucide-react";
 import { TapButton } from "@/components/app/onboarding/TapButton";
 
 const container = {
@@ -40,12 +40,26 @@ export function WelcomeScreen({ onStart }: { onStart: () => void }) {
         En menos de 2 minutos vas a entender por qué tu cuerpo no responde como antes y cómo
         empezar a desinflamarte — sin volver a contar una sola caloría.
       </motion.p>
-      <motion.p variants={item} className="mt-3 text-[12.5px] text-txt-tertiary">
-        Nada de esto se comparte. Solo es para entender tu situación y armar tu ruta.
-      </motion.p>
-      <motion.div variants={item} className="mt-8 w-full max-w-[300px]">
+      <motion.ul variants={item} className="mt-6 w-full max-w-[300px] space-y-2.5 text-left">
+        {[
+          "Tu Score Metabólico 40+, de 0 a 100",
+          "Tus 3 prioridades para esta semana",
+          "Sin tarjeta para empezar",
+        ].map((texto) => (
+          <li key={texto} className="flex items-center gap-2.5 text-[14px] text-txt-primary">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-primary-soft text-brand-primary">
+              <Check className="h-3 w-3" strokeWidth={3} />
+            </span>
+            {texto}
+          </li>
+        ))}
+      </motion.ul>
+      <motion.div variants={item} className="mt-7 w-full max-w-[300px]">
         <TapButton onClick={onStart}>Comenzar mi diagnóstico de 2 minutos</TapButton>
       </motion.div>
+      <motion.p variants={item} className="mt-4 max-w-[34ch] text-[12.5px] leading-relaxed text-txt-tertiary">
+        Nada de esto se comparte. EVA 40+ es orientación de bienestar, no consejo médico.
+      </motion.p>
     </motion.div>
   );
 }

@@ -1,6 +1,7 @@
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
 import { Reveal } from "@/components/app/ui/Reveal";
 import { TapLink } from "@/components/app/ui/TapLink";
+import { SegunOferta } from "@/components/app/ui/SegunOferta";
 
 export function FinalCta() {
   return (
@@ -12,7 +13,12 @@ export function FinalCta() {
         </h2>
         <p className="mt-4 text-[15px] leading-relaxed text-txt-on-dark-secondary">
           La mujer que entiende su cuerpo después de los 40 — no la que sigue peleando
-          contra él. Diagnóstico gratis, ruta semanal por $9.99/mes, garantía de 7 días.
+          contra él. Diagnóstico gratis,{" "}
+          <SegunOferta
+            pagado="7 días de ruta por $1, luego desde $9.99/mes"
+            gratis="7 días de ruta sin costo, luego desde $9.99/mes"
+          />
+          . Si no te sirve, te devolvemos tu pago.
         </p>
         <TapLink
           href="/onboarding"
@@ -21,7 +27,7 @@ export function FinalCta() {
           Hacer mi diagnóstico gratis
         </TapLink>
         <p className="mx-auto mt-6 max-w-[42ch] text-[12.5px] leading-relaxed text-txt-on-dark-secondary">
-          PD: tu diagnóstico es gratis y toma 5 minutos. Si después de probar tu ruta no te
+          PD: tu diagnóstico es gratis y toma 2 minutos. Si después de probar tu ruta no te
           sirve, te devolvemos tu dinero. Lo único que pierdes por no intentarlo es otra
           semana sintiéndote igual.
         </p>

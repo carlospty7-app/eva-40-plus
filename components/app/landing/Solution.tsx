@@ -7,7 +7,7 @@ const steps = [
   {
     icon: ClipboardList,
     title: "Respondes tu diagnóstico",
-    text: "5 minutos, sin básculas ni laboratorios — solo tus síntomas y tu día a día.",
+    text: "2 minutos, sin básculas ni laboratorios — solo tus síntomas y tu día a día.",
   },
   {
     icon: Activity,

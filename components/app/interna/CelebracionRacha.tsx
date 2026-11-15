@@ -50,7 +50,7 @@ export function CelebracionRacha({
                 initial={{ opacity: 0, scale: 0.6 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3 + i * 0.06, type: "spring", stiffness: 300, damping: 18 }}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-accent-soft text-[11px] font-bold text-brand-accent"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-accent-soft text-[12px] font-bold text-brand-accent"
               >
                 {d}
               </motion.span>

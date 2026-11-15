@@ -1,6 +1,32 @@
 # ESTADO — EVA 40+
 Última actualización: 2026-09-15 (noche) | Sesión actual: 10 — Stripe Live + correos del negocio + doble oferta
 
+⏸️ CHECKPOINT — 2026-11-15 (noche): TODO lo recomendado por la auditoría 360° APLICADO y PUBLICADO a `main` (a pedido).
+Cuenta: botón "Administrar o cancelar mi suscripción" (`/api/stripe/portal`, probado en vivo: Stripe devuelve link
+válido), "Borrar mi cuenta" con confirmación (`/api/cuenta/eliminar`: cancela Stripe + borra foto + usuario, el resto
+cae en cascada), ayuda hola@eva40.app. Hojas decorativas (`BotanicalGlow` light) bajadas a 0.2 de opacidad (ya no
+tapan texto). `CargandoOError` (error/sin conexión + Reintentar) en 7 pantallas. Retos: valor primero, cuestionario
+de salud solo al tocar "Empezar"; emojis → `RetoIcono`. Mi Ruta: `VideoConPoster`, CTA arriba, tonos neutros. Compras:
+persiste lo marcado (localStorage por semana), agrupado, contador, copiar, estado vacío. Hoy: título protagonista,
+notas opcionales plegadas. EVA: chat libre primero, Detener/Reintentar. Progreso: insight con números. Ciclo: sin
+tarjetas vacías. Texto mínimo 12px en toda la app. Landing/paywall/términos ahora dicen la VERDAD del precio ($79/año,
+$1 por 7 días; antes decían $71.88 y "prueba gratis") y la oferta `?oferta=gratis` se recuerda desde cualquier
+entrada (`lib/oferta.ts`, `SegunOferta`); FAQ nuevo "¿cuándo me cobran?"; "5 minutos" → "2 minutos"; sin botón
+Google; disclaimer en onboarding. SEO/PWA: manifest, robots, sitemap, OG image, iconos 192/512. Tests (vitest, 6) +
+CI en `.github/workflows/ci.yml`. Verificado: mínimo de contraseña 8 YA guardado en Supabase (signUp con 7 caracteres
+rechazado). PENDIENTE: puntuar de nuevo con `revisor-visual` las pantallas cambiadas y re-capturar la landing con
+scroll real (secciones 2-9 sin puntuar); Sentry (necesita cuenta del usuario); decisión de reembolsos sobre acceso.
+
+⏸️ CHECKPOINT — 2026-11-15: AUDITORÍA 360° (/auditoria --rapido) ENTREGADA (ver arriba lo ya aplicado).
+Puntaje ~6.5/10. Ninguna pantalla pasa el gate del revisor (≥36/40 y ≥16/20): rangos 24-30/40 y 9-13/20. Hallazgos
+mayores: (1) `BotanicalGlow` (hojas) tapa precio/CTA/texto en paywall, login, onboarding, Hoy y EVA; (2) Cuenta NO tiene
+cancelar suscripción / método de pago / borrar cuenta aunque push y correo de dunning mandan a /app/cuenta (falta
+Stripe Customer Portal); (3) Retos pide cuestionario médico antes de dar valor; Ruta con video vacío; Compras pierde
+lo marcado; (4) sin manifest/OG image/robots/sitemap, sin tests/CI/Sentry; (5) sin estados de error de carga.
+Landing secciones 2-9 NO se pudieron puntuar (Reveal no dispara en captura completa; hay que re-capturar con scroll).
+Capturas en `.playwright-mcp/aud-*.png` (gitignored). Pendiente usuario: confirmar que "Minimum password length = 8"
+quedó guardado en Supabase (la protección de contraseñas filtradas es plan Pro, se deja apagada).
+
 ⏸️ CHECKPOINT — 2026-11-14 (noche): TODO lo de la auditoría CORREGIDO y probado en local con cuentas desechables.
 BASE (migración `seguridad_acceso_perfiles_y_encuesta`, YA APLICADA EN LA BASE REAL, o sea ya afecta producción):
 `profiles.activo/trial_activo` nacen en `false`; `authenticated` solo puede editar sus datos personales (nombre, foto,

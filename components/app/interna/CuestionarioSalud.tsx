@@ -61,7 +61,7 @@ export function CuestionarioSalud({ onCompletar }: { onCompletar: (flags: FlagsS
         ))}
       </div>
 
-      <p className="mt-3 text-[11px] leading-relaxed text-txt-tertiary">
+      <p className="mt-3 text-[12px] leading-relaxed text-txt-tertiary">
         Esto no reemplaza a tu médico — solo ayuda a EVA a advertirte antes de un reto que no le
         conviene a tu situación.
       </p>

@@ -43,7 +43,7 @@ export function CommitmentScreen({
         className="mt-6 w-full accent-[var(--brand-primary)]"
         aria-label="Días por semana"
       />
-      <div className="mt-1 flex justify-between text-[11px] text-txt-tertiary">
+      <div className="mt-1 flex justify-between text-[12px] text-txt-tertiary">
         <span>1</span>
         <span>7</span>
       </div>

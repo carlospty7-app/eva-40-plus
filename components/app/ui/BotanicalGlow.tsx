@@ -21,8 +21,10 @@ export function BotanicalGlow({
   const filterId = `botanical-blur-${useId()}`;
   const leaf = "M0,-70 C38,-50 38,50 0,70 C-38,50 -38,-50 0,-70 Z";
   const vein = "M0,-62 L0,62 M0,-20 L-18,4 M0,-20 L18,4 M0,26 L-16,46 M0,26 L16,46";
-  const fillOpacity = variant === "dark" ? 0.85 : 0.55;
-  const veinOpacity = variant === "dark" ? 0.35 : 0.4;
+  // En fondo claro las hojas son textura de ambiente, no contenido: con opacidad alta tapaban
+  // precios, botones y texto en paywall/login/onboarding.
+  const fillOpacity = variant === "dark" ? 0.85 : 0.2;
+  const veinOpacity = variant === "dark" ? 0.35 : 0.22;
   const blurStd = variant === "dark" ? 2 : 1;
 
   const leaves = [

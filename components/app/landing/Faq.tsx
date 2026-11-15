@@ -5,8 +5,10 @@ import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown } from "lucide-react";
 import { Section, Eyebrow } from "@/components/app/ui/Section";
 import { Reveal } from "@/components/app/ui/Reveal";
+import { useOferta } from "@/components/app/ui/SegunOferta";
+import type { Oferta } from "@/lib/oferta";
 
-const faqs = [
+const construirFaqs = (oferta: Oferta) => [
   {
     q: "¿Voy a tener que contar calorías?",
     a: "No. EVA 40+ no vende conteo de calorías — vende comprensión de tu cuerpo y prioridades semanales claras. El check-in diario toma 60 segundos.",
@@ -24,6 +26,14 @@ const faqs = [
     a: "No. EVA 40+ es orientación de bienestar, no reemplaza a tu médico. Si tienes una condición diagnosticada, te recomendamos revisar tu ruta con tu profesional de salud.",
   },
   {
+    q: "¿Cuándo me cobran y cómo cancelo?",
+    a:
+      (oferta === "gratis"
+        ? "Tus primeros 7 días no tienen ningún costo. "
+        : "Hoy solo pagas $1 por tus primeros 7 días. ") +
+      "Al día 7 se activa el plan que elegiste ($9.99/mes o $79/año) y ese es el primer cobro; un día antes te avisamos. Puedes cancelar tú misma, cuando quieras, desde Cuenta dentro de la app, y si no te sirve te devolvemos tu pago.",
+  },
+  {
     q: "¿Vale la pena pagar $9.99/mes?",
     a: "Es menos de $0.35 al día — probablemente menos de lo que ya gastaste en dietas, retos o suplementos que no calzaban con lo que te estaba pasando a ti.",
   },
@@ -31,6 +41,7 @@ const faqs = [
 
 export function Faq() {
   const [open, setOpen] = useState<number | null>(0);
+  const faqs = construirFaqs(useOferta());
 
   return (
     <Section>

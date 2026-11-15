@@ -25,7 +25,7 @@ export function GrowthBadge({ progress }: { progress: number }) {
         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-primary text-txt-inverse">
           <Icon className="h-3 w-3" />
         </span>
-        <span className="text-[10.5px] font-semibold text-brand-primary">{label}</span>
+        <span className="text-[12px] font-semibold text-brand-primary">{label}</span>
       </motion.div>
     </AnimatePresence>
   );

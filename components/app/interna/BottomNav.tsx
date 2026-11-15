@@ -43,7 +43,7 @@ export function BottomNav() {
                 strokeWidth={activo ? 2.4 : 2}
               />
               <span
-                className={`text-[10.5px] font-medium ${activo ? "text-brand-primary" : "text-txt-tertiary"}`}
+                className={`text-[12px] font-medium ${activo ? "text-brand-primary" : "text-txt-tertiary"}`}
               >
                 {tab.label}
               </span>

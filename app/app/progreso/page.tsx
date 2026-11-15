@@ -6,6 +6,7 @@ import { Area, AreaChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YA
 import { motion } from "motion/react";
 import { Droplet, Lightbulb, TrendingDown, TrendingUp } from "lucide-react";
 import { TopHeader } from "@/components/app/interna/TopHeader";
+import { CargandoOError } from "@/components/app/ui/CargandoOError";
 import { ScoreRing } from "@/components/app/ui/ScoreRing";
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
 import { computeScoreDia, insightsAutomaticos, labelCampo, recomendacionParaCheckin } from "@/lib/app/engine";
@@ -79,9 +80,13 @@ export default function ProgresoPage() {
     return (
       <div className="relative min-h-dvh">
         <TopHeader titulo="Progreso" />
-        <div className="mt-6 space-y-3 px-4">
-          <div className="h-40 animate-pulse rounded-xl bg-surface-tertiary/50" />
-          <div className="h-32 animate-pulse rounded-xl bg-surface-tertiary/50" />
+        <div className="px-4">
+          <CargandoOError>
+            <div className="mt-6 space-y-3">
+              <div className="h-40 animate-pulse rounded-xl bg-surface-tertiary/50" />
+              <div className="h-32 animate-pulse rounded-xl bg-surface-tertiary/50" />
+            </div>
+          </CargandoOError>
         </div>
       </div>
     );
@@ -117,7 +122,7 @@ export default function ProgresoPage() {
         >
           <ScoreRing value={scoreActual} size={92} thickness={10} color="accent" />
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
               Score Metabólico 40+
             </p>
             {delta != null && (
@@ -149,8 +154,8 @@ export default function ProgresoPage() {
             className="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-brand-accent/10 blur-3xl"
           />
           <div className="relative flex items-center justify-between px-1">
-            <p className="text-[11px] text-txt-tertiary">Últimos {chartData.length} días</p>
-            <p className="flex items-center gap-1.5 text-[11px] text-txt-tertiary">
+            <p className="text-[12px] text-txt-tertiary">Últimos {chartData.length} días</p>
+            <p className="flex items-center gap-1.5 text-[12px] text-txt-tertiary">
               <span className="h-1.5 w-4 rounded-full border border-dashed border-border-strong" />
               Promedio {promedio}
             </p>
@@ -167,13 +172,13 @@ export default function ProgresoPage() {
                 </defs>
                 <XAxis
                   dataKey="fecha"
-                  tick={{ fontSize: 10, fill: "var(--text-tertiary)" }}
+                  tick={{ fontSize: 12, fill: "var(--text-tertiary)" }}
                   axisLine={false}
                   tickLine={false}
                   interval={Math.max(0, Math.ceil(chartData.length / 4) - 1)}
                 />
                 <YAxis
-                  tick={{ fontSize: 9, fill: "var(--text-tertiary)" }}
+                  tick={{ fontSize: 12, fill: "var(--text-tertiary)" }}
                   axisLine={false}
                   tickLine={false}
                   width={28}
@@ -236,7 +241,7 @@ export default function ProgresoPage() {
               </span>
               <div>
                 <p className="text-[13px] font-medium text-txt-primary">Tu ciclo</p>
-                <p className="text-[11.5px] text-txt-tertiary">
+                <p className="text-[12px] text-txt-tertiary">
                   {diasCicloEsteMes > 0
                     ? `${diasCicloEsteMes} día${diasCicloEsteMes === 1 ? "" : "s"} registrados este mes`
                     : "Calendario, patrones y cómo te afecta — opcional"}
@@ -253,7 +258,7 @@ export default function ProgresoPage() {
           transition={{ delay: 0.2 }}
           className="mt-4 rounded-xl border border-border-default/60 bg-surface-primary p-4 shadow-sm"
         >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
             Historial de tus revisiones
           </p>
           <ul className="mt-2 divide-y divide-border-default/60">
@@ -264,7 +269,7 @@ export default function ProgresoPage() {
                   <span className="text-[13px] text-txt-secondary">{formatoCorto(new Date(c.fecha))}</span>
                   <span className="flex items-center gap-2 text-[12.5px] text-txt-tertiary">
                     <span className="font-semibold text-txt-primary">{computeScoreDia(c)}</span>
-                    · {labelCampo(rec.campoClave)}
+                    · lo que más pesó: {labelCampo(rec.campoClave).toLowerCase()}
                   </span>
                 </li>
               );

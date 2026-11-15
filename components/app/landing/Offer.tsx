@@ -4,6 +4,7 @@ import { IconChip } from "@/components/app/ui/IconChip";
 import { Reveal } from "@/components/app/ui/Reveal";
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
 import { TapLink } from "@/components/app/ui/TapLink";
+import { SegunOferta } from "@/components/app/ui/SegunOferta";
 
 const stack = [
   {
@@ -43,7 +44,7 @@ export function Offer() {
               <IconChip icon={item.icon} size="sm" />
               <div className="flex-1 pt-1">
                 <p className="text-[13.5px] font-semibold text-txt-primary">{item.title}</p>
-                <p className="text-[12px] text-txt-tertiary">Mata: {item.kills}</p>
+                <p className="mt-0.5 text-[13px] text-txt-tertiary">Para cuando piensas: {item.kills}</p>
               </div>
               <span className="pt-1 text-[13px] font-semibold text-txt-tertiary line-through">
                 {item.value}
@@ -62,13 +63,18 @@ export function Offer() {
             <p className="mt-2 font-display text-[30px] text-txt-primary">
               $9.99<span className="text-[14px] text-txt-tertiary">/mes</span>
             </p>
-            <p className="mt-1 text-[12.5px] text-txt-tertiary">7 días de prueba gratis</p>
+            <p className="mt-1 text-[13px] text-txt-tertiary">
+              <SegunOferta
+                pagado="Tus primeros 7 días por $1, luego $9.99/mes"
+                gratis="7 días gratis, luego $9.99/mes"
+              />
+            </p>
             <TapLink
               href="/onboarding"
               fullWidth
               className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-lg bg-brand-primary text-[14px] font-semibold text-txt-inverse transition-transform hover:scale-[1.02]"
             >
-              Empezar prueba gratis
+              <SegunOferta pagado="Empezar por $1" gratis="Empezar 7 días gratis" />
             </TapLink>
           </div>
         </Reveal>
@@ -76,7 +82,7 @@ export function Offer() {
         <Reveal delay={0.08}>
           <div className="relative overflow-hidden rounded-2xl bg-surface-dark p-6 text-txt-inverse">
             <BotanicalGlow className="opacity-70" />
-            <span className="absolute -top-3 left-6 rounded-full bg-brand-gold px-3 py-1 text-[11px] font-semibold text-surface-dark-2">
+            <span className="absolute -top-3 left-6 rounded-full bg-brand-gold px-3 py-1 text-[12px] font-semibold text-surface-dark-2">
               Mejor valor
             </span>
             <div className="relative">
@@ -84,20 +90,23 @@ export function Offer() {
                 Anual
               </p>
               <p className="mt-2 font-display text-[30px]">
-                $5.99<span className="text-[14px] text-txt-on-dark-secondary">/mes</span>
+                $79<span className="text-[14px] text-txt-on-dark-secondary">/año</span>
               </p>
-              <p className="mt-1 text-[12.5px] text-txt-on-dark-secondary">
-                Se cobra $71.88/año · equivalente a 4 meses gratis
+              <p className="mt-1 text-[13px] text-txt-on-dark-secondary">
+                Equivale a $6.58/mes · ahorras 34%
               </p>
-              <p className="mt-1 text-[12.5px] text-txt-on-dark-secondary">
-                7 días de prueba gratis
+              <p className="mt-1 text-[13px] text-txt-on-dark-secondary">
+                <SegunOferta
+                  pagado="Tus primeros 7 días por $1, luego $79/año"
+                  gratis="7 días gratis, luego $79/año"
+                />
               </p>
               <TapLink
                 href="/onboarding"
                 fullWidth
                 className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-lg bg-txt-inverse text-[14px] font-semibold text-brand-primary transition-transform hover:scale-[1.02]"
               >
-                Empezar prueba gratis
+                <SegunOferta pagado="Empezar por $1" gratis="Empezar 7 días gratis" />
               </TapLink>
             </div>
           </div>

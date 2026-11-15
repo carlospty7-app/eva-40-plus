@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PlayCircle, X } from "lucide-react";
 import { BASE_VIDEOS_YOGA, BIBLIOTECA_YOGA } from "@/lib/app/seed";
+import { VideoConPoster } from "@/components/app/interna/VideoConPoster";
 
 /** Videos reales de yoga de Maru que no están atados a un día fijo — para que la usuaria tenga
  * algo con qué variar cuando quiera, no solo la rutina del día. Colapsados por defecto: cada uno
@@ -13,7 +14,7 @@ export function BibliotecaYoga() {
   return (
     <div className="mt-4 rounded-2xl border border-border-default/40 bg-surface-primary p-4 shadow-md">
       <p className="text-[12.5px] font-semibold text-txt-primary">Más videos de yoga con Maru</p>
-      <p className="mt-0.5 text-[11.5px] text-txt-tertiary">
+      <p className="mt-0.5 text-[12px] text-txt-tertiary">
         Para cuando quieras variar, además de la rutina del día.
       </p>
 
@@ -36,12 +37,10 @@ export function BibliotecaYoga() {
                   )}
                   {v.titulo}
                 </span>
-                <span className="text-[11.5px] text-txt-tertiary">{v.duracion}</span>
+                <span className="text-[12px] text-txt-tertiary">{v.duracion}</span>
               </button>
               {estaAbierto && (
-                <video controls playsInline preload="metadata" className="mt-2.5 w-full rounded-lg bg-surface-tertiary">
-                  <source src={url} type="video/mp4" />
-                </video>
+                <VideoConPoster src={url} titulo={v.titulo} duracion={v.duracion} />
               )}
             </div>
           );

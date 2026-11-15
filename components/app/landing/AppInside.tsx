@@ -19,7 +19,7 @@ export function AppInside() {
           <div className="h-full rounded-2xl bg-surface-dark p-5 text-center text-txt-inverse shadow-md">
             <ScoreRing value={72} size={72} thickness={9} />
             <p className="mt-3 font-display text-[14px]">Tu Score Metabólico</p>
-            <p className="mt-1 text-[11.5px] text-txt-on-dark-secondary">
+            <p className="mt-1 text-[12px] text-txt-on-dark-secondary">
               Inflamación moderada
             </p>
           </div>
@@ -33,7 +33,7 @@ export function AppInside() {
               {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
                 <div
                   key={i}
-                  className={`flex h-7 items-center justify-center rounded-[8px] text-[10px] font-semibold ${
+                  className={`flex h-7 items-center justify-center rounded-[8px] text-[12px] font-semibold ${
                     i === 2
                       ? "bg-brand-primary text-txt-inverse"
                       : "bg-surface-tertiary text-txt-tertiary"
@@ -43,10 +43,10 @@ export function AppInside() {
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-[10.5px] font-semibold uppercase tracking-wide text-txt-tertiary">
+            <p className="mt-3 text-[12px] font-semibold uppercase tracking-wide text-txt-tertiary">
               Hoy, miércoles
             </p>
-            <div className="mt-1.5 rounded-[10px] bg-brand-primary-soft px-2.5 py-2 text-left text-[11.5px] font-medium text-brand-primary">
+            <div className="mt-1.5 rounded-[10px] bg-brand-primary-soft px-2.5 py-2 text-left text-[12px] font-medium text-brand-primary">
               Sube proteína en el desayuno
             </div>
           </div>
@@ -56,7 +56,7 @@ export function AppInside() {
         <Reveal delay={0.16} className="w-[210px] shrink-0 snap-center">
           <div className="h-full rounded-2xl bg-brand-primary-soft p-5 shadow-sm">
             <p className="font-display text-[14px] text-txt-primary">Check-in de 60 segundos</p>
-            <div className="mt-3 space-y-2 text-left text-[11.5px] text-txt-primary">
+            <div className="mt-3 space-y-2 text-left text-[12px] text-txt-primary">
               <div className="flex items-center gap-2 rounded-[10px] bg-surface-primary px-2.5 py-2">
                 <CheckCircle2 className="h-3.5 w-3.5 text-brand-primary" />
                 Inflamación registrada

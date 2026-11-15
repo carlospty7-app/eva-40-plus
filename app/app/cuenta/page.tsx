@@ -9,13 +9,18 @@ import {
   Camera,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
   FileText,
+  LifeBuoy,
   LogOut,
   Mail,
   Pencil,
   ShieldCheck,
   Sparkles,
+  Trash2,
 } from "lucide-react";
+import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
+import { CargandoOError } from "@/components/app/ui/CargandoOError";
 import { formatoCorto } from "@/lib/app/dates";
 import { crearClienteNavegador } from "@/lib/supabase/client";
 import {
@@ -43,6 +48,11 @@ export default function CuentaPage() {
   const [recordatoriosEstado, setRecordatoriosEstado] = useState<"inicial" | "activando" | "activado" | "rechazado">(
     "inicial",
   );
+  const [abriendoPortal, setAbriendoPortal] = useState(false);
+  const [avisoPlan, setAvisoPlan] = useState<string | null>(null);
+  const [confirmandoBorrado, setConfirmandoBorrado] = useState(false);
+  const [borrando, setBorrando] = useState(false);
+  const [errorBorrado, setErrorBorrado] = useState<string | null>(null);
 
   useEffect(() => {
     if (permisoYaDecidido() && typeof Notification !== "undefined" && Notification.permission === "granted") {
@@ -73,6 +83,50 @@ export default function CuentaPage() {
     await actualizarPerfilSupabase(supabase, userId, cambios);
   }
 
+  async function administrarSuscripcion() {
+    if (abriendoPortal) return;
+    setAbriendoPortal(true);
+    setAvisoPlan(null);
+    try {
+      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const data = res.ok ? await res.json() : null;
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setAvisoPlan(
+        res.status === 404
+          ? "Aún no encontramos una suscripción ligada a tu cuenta. Escríbenos a hola@eva40.app y lo resolvemos."
+          : "No pudimos abrir la administración de tu suscripción. Intenta de nuevo o escríbenos a hola@eva40.app.",
+      );
+    } catch {
+      setAvisoPlan("No pudimos conectarnos. Revisa tu internet e intenta de nuevo.");
+    }
+    setAbriendoPortal(false);
+  }
+
+  async function borrarCuenta() {
+    if (borrando) return;
+    setBorrando(true);
+    setErrorBorrado(null);
+    try {
+      const res = await fetch("/api/cuenta/eliminar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmar: true }),
+      });
+      if (res.status === 204) {
+        await crearClienteNavegador().auth.signOut();
+        router.push("/");
+        return;
+      }
+      setErrorBorrado((await res.text()) || "No pudimos borrar tu cuenta. Escríbenos a hola@eva40.app.");
+    } catch {
+      setErrorBorrado("No pudimos conectarnos. Revisa tu internet e intenta de nuevo.");
+    }
+    setBorrando(false);
+  }
+
   function guardarNombre() {
     const limpio = nombreTemp.trim();
     if (limpio) actualizarPerfil({ nombre: limpio });
@@ -88,29 +142,34 @@ export default function CuentaPage() {
   }
 
   return (
-    <div className="relative min-h-dvh px-4 pt-4">
-      <div className="flex items-center gap-2">
+    <div className="relative min-h-dvh overflow-hidden px-4 pt-4">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[420px] overflow-hidden">
+        <BotanicalGlow variant="light" />
+      </div>
+      <div className="relative z-10 flex items-center gap-2">
         <button
           type="button"
           onClick={() => router.back()}
           aria-label="Atrás"
-          className="flex h-10 w-10 items-center justify-center rounded-full text-txt-secondary"
+          className="flex h-11 w-11 items-center justify-center rounded-full text-txt-secondary"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <span className="font-display text-[16px] text-txt-primary">Cuenta</span>
+        <span className="font-display text-[17px] text-txt-primary">Cuenta</span>
       </div>
 
       {!estado && (
-        <div className="mt-5 space-y-3">
-          <div className="h-24 animate-pulse rounded-xl bg-surface-tertiary/50" />
-          <div className="h-16 animate-pulse rounded-xl bg-surface-tertiary/50" />
-          <div className="h-40 animate-pulse rounded-xl bg-surface-tertiary/50" />
-        </div>
+        <CargandoOError>
+          <div className="mt-5 space-y-3">
+            <div className="h-24 animate-pulse rounded-xl bg-surface-tertiary/50" />
+            <div className="h-16 animate-pulse rounded-xl bg-surface-tertiary/50" />
+            <div className="h-40 animate-pulse rounded-xl bg-surface-tertiary/50" />
+          </div>
+        </CargandoOError>
       )}
 
       {estado && (
-        <>
+        <div className="relative z-10">
           <div className="mt-5 flex items-center gap-4 rounded-2xl border border-border-default/40 bg-surface-primary p-4 shadow-md">
             <div className="relative shrink-0">
               <div className="flex h-[64px] w-[64px] items-center justify-center overflow-hidden rounded-full bg-brand-primary-soft text-[22px] font-semibold text-brand-primary">
@@ -161,15 +220,15 @@ export default function CuentaPage() {
                   <Pencil className="h-3 w-3 text-txt-tertiary" />
                 </button>
               )}
-              <p className="mt-0.5 flex items-center gap-1.5 truncate text-[12.5px] text-txt-secondary">
-                <Mail className="h-3 w-3 shrink-0" />
-                {estado.perfil.email || "Sin correo registrado"}
+              <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[13px] text-txt-secondary">
+                <Mail className="h-3.5 w-3.5 shrink-0" />
+                <span className="min-w-0 truncate">{estado.perfil.email || "Sin correo registrado"}</span>
               </p>
             </div>
           </div>
 
           <div className="mt-4 rounded-xl border border-border-default/60 bg-surface-primary p-4 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
               Tu plan
             </p>
             <div className="mt-2 flex items-center gap-2">
@@ -179,31 +238,51 @@ export default function CuentaPage() {
               </span>
             </div>
             {estado.perfil.trialActivo && (
-              <p className="mt-2 text-[13px] text-txt-secondary">
-                Estás en tu prueba gratuita. Se activa el cobro el{" "}
+              <p className="mt-2 text-[14px] text-txt-secondary">
+                Estás en tus primeros 7 días. Tu plan completo se cobra el{" "}
                 <span className="font-medium text-txt-primary">
                   {formatoCorto(new Date(estado.perfil.fechaCobro))}
                 </span>{" "}
                 si no cancelas antes.
               </p>
             )}
+            <button
+              type="button"
+              onClick={administrarSuscripcion}
+              disabled={abriendoPortal}
+              className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-full border border-border-strong text-[14px] font-medium text-txt-primary disabled:opacity-60"
+            >
+              <CreditCard className="h-4 w-4" />
+              {abriendoPortal ? "Abriendo…" : "Administrar o cancelar mi suscripción"}
+            </button>
+            {avisoPlan && <p className="mt-2 text-[13px] text-status-warning">{avisoPlan}</p>}
           </div>
 
           <div className="mt-4 divide-y divide-border-default/60 rounded-xl border border-border-default/60 bg-surface-primary shadow-sm">
             <div className="p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
                 Tu enfoque actual
               </p>
-              <p className="mt-1 text-[13.5px] text-txt-primary">{estado.perfil.dolorLabel}</p>
+              <p className="mt-1 text-[14px] text-txt-primary">{estado.perfil.dolorLabel}</p>
             </div>
           </div>
+
+          <a
+            href="mailto:hola@eva40.app"
+            className="mt-4 flex min-h-[52px] items-center justify-between rounded-xl border border-border-default/60 bg-surface-primary p-4 text-[14px] text-txt-primary shadow-sm"
+          >
+            <span className="flex items-center gap-2.5">
+              <LifeBuoy className="h-4 w-4 text-brand-primary" /> ¿Necesitas ayuda? hola@eva40.app
+            </span>
+            <ChevronRight className="h-4 w-4 text-txt-tertiary" />
+          </a>
 
           <div className="mt-4 rounded-xl border border-border-default/60 bg-surface-primary shadow-sm">
             {LEGALES.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
-                className="flex items-center justify-between border-b border-border-default/60 p-4 text-[13.5px] text-txt-primary last:border-0"
+                className="flex min-h-[52px] items-center justify-between border-b border-border-default/60 p-4 text-[14px] text-txt-primary last:border-0"
               >
                 <span className="flex items-center gap-2.5">
                   <FileText className="h-4 w-4 text-txt-tertiary" /> {l.label}
@@ -220,7 +299,7 @@ export default function CuentaPage() {
                   <Bell className="h-4 w-4" />
                 </span>
                 <div className="flex-1">
-                  <p className="text-[13.5px] font-medium text-txt-primary">Avísame antes de perder mi racha</p>
+                  <p className="text-[14px] font-medium text-txt-primary">Avísame antes de perder mi racha</p>
                   <p className="mt-0.5 text-[12px] text-txt-secondary">
                     Un recordatorio en tu celular si se acerca el día y no has hecho tu revisión.
                   </p>
@@ -264,7 +343,44 @@ export default function CuentaPage() {
           >
             <LogOut className="h-4 w-4" /> Cerrar sesión
           </button>
-        </>
+
+          {!confirmandoBorrado ? (
+            <button
+              type="button"
+              onClick={() => setConfirmandoBorrado(true)}
+              className="mt-3 flex h-11 w-full items-center justify-center gap-2 text-[13.5px] font-medium text-status-error"
+            >
+              <Trash2 className="h-4 w-4" /> Borrar mi cuenta
+            </button>
+          ) : (
+            <div className="mt-3 rounded-xl border border-status-error/40 bg-surface-primary p-4 shadow-sm">
+              <p className="text-[14px] font-medium text-txt-primary">¿Borrar tu cuenta para siempre?</p>
+              <p className="mt-1 text-[13px] text-txt-secondary">
+                Cancelamos tu suscripción y eliminamos todos tus datos (revisiones, ciclo, retos). No se puede
+                deshacer.
+              </p>
+              {errorBorrado && <p className="mt-2 text-[13px] text-status-error">{errorBorrado}</p>}
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmandoBorrado(false)}
+                  disabled={borrando}
+                  className="flex h-11 flex-1 items-center justify-center rounded-full border border-border-strong text-[13.5px] font-medium text-txt-secondary"
+                >
+                  Conservarla
+                </button>
+                <button
+                  type="button"
+                  onClick={borrarCuenta}
+                  disabled={borrando}
+                  className="flex h-11 flex-1 items-center justify-center rounded-full bg-status-error text-[13.5px] font-semibold text-white disabled:opacity-60"
+                >
+                  {borrando ? "Borrando…" : "Sí, borrar todo"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       <div className="h-16" />

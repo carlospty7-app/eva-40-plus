@@ -14,10 +14,11 @@ export default function TerminosPage() {
       </p>
       <p>
         <strong>Suscripción:</strong> el acceso a EVA 40+ empieza con un cargo de $1 por los
-        primeros 7 días; al terminar ese período se activa automáticamente el plan mensual o
-        anual elegido, procesado de forma segura por Stripe, salvo que canceles antes. Puedes
-        cancelar cuando quieras escribiéndonos a soporte; la cancelación aplica al final del
-        período pagado.
+        primeros 7 días (o con 7 días sin costo, si llegaste por una promoción que así lo
+        indica); al terminar ese período se activa automáticamente el plan mensual ($9.99/mes) o
+        anual ($79/año) elegido, procesado de forma segura por Stripe, salvo que canceles antes.
+        Puedes cancelar cuando quieras tú misma desde Cuenta → Administrar o cancelar mi
+        suscripción; la cancelación aplica al final del período pagado.
       </p>
       <p>
         <strong>Uso permitido:</strong> la cuenta es personal e intransferible. No está permitido

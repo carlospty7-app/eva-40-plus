@@ -33,7 +33,7 @@ export function InfoTooltip({ texto }: { texto: string }) {
       {abierto && (
         <div
           role="tooltip"
-          className="absolute left-1/2 top-full z-20 mt-1.5 w-56 -translate-x-1/2 rounded-lg bg-surface-dark px-3 py-2.5 text-[11.5px] normal-case leading-relaxed tracking-normal text-txt-inverse shadow-lg"
+          className="absolute left-1/2 top-full z-20 mt-1.5 w-56 -translate-x-1/2 rounded-lg bg-surface-dark px-3 py-2.5 text-[12px] normal-case leading-relaxed tracking-normal text-txt-inverse shadow-lg"
         >
           {texto}
         </div>

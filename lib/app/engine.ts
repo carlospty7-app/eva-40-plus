@@ -167,7 +167,15 @@ export function insightsAutomaticos(checkins: Checkin[]): string[] {
   if (buenSueno.length >= 2 && malSueno.length >= 2) {
     const diff = promedio(malSueno, "inflamacion") - promedio(buenSueno, "inflamacion");
     if (diff >= 0.8) {
-      insights.push("Tu inflamación baja notablemente los días que duermes mejor.");
+      const puntosScore = Math.round(
+        buenSueno.reduce((s, c) => s + computeScoreDia(c), 0) / buenSueno.length -
+          malSueno.reduce((s, c) => s + computeScoreDia(c), 0) / malSueno.length,
+      );
+      insights.push(
+        puntosScore > 0
+          ? `Tu inflamación baja los días que duermes mejor: tu Score fue ${puntosScore} puntos más alto en tus ${buenSueno.length} días de buen sueño.`
+          : "Tu inflamación baja notablemente los días que duermes mejor.",
+      );
     }
   }
 
@@ -176,7 +184,9 @@ export function insightsAutomaticos(checkins: Checkin[]): string[] {
   if (altoEstres.length >= 2 && bajoEstres.length >= 2) {
     const diff = promedio(altoEstres, "antojos") - promedio(bajoEstres, "antojos");
     if (diff >= 0.8) {
-      insights.push("Tus antojos suben cuando reportas más estrés en el día.");
+      insights.push(
+        `Tus antojos suben ${diff.toFixed(1)} puntos (de 5) en los días que reportas más estrés.`,
+      );
     }
   }
 

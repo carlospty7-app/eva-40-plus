@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Check, ChevronDown, ChevronUp, Minus, Sparkles, Trophy } from "lucide-react";
 import { TopHeader } from "@/components/app/interna/TopHeader";
+import { CargandoOError } from "@/components/app/ui/CargandoOError";
+import { RetoIcono } from "@/components/app/interna/RetoIcono";
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
 import { TapButton } from "@/components/app/onboarding/TapButton";
 import { CuestionarioSalud } from "@/components/app/interna/CuestionarioSalud";
@@ -49,6 +51,7 @@ export default function RetosPage() {
   const [checkinsDelReto, setCheckinsDelReto] = useState<Checkin[]>([]);
   const [cargando, setCargando] = useState(true);
   const [procesando, setProcesando] = useState(false);
+  const [retoPendiente, setRetoPendiente] = useState<RetoDef | null>(null);
 
   async function cargarTodo(uid: string) {
     const supabase = crearClienteNavegador();
@@ -89,9 +92,13 @@ export default function RetosPage() {
     return (
       <div className="relative min-h-dvh">
         <TopHeader titulo="Retos" />
-        <div className="mt-6 space-y-3 px-4">
-          <div className="h-40 animate-pulse rounded-xl bg-surface-tertiary/50" />
-          <div className="h-56 animate-pulse rounded-xl bg-surface-tertiary/50" />
+        <div className="px-4">
+          <CargandoOError>
+            <div className="mt-6 space-y-3">
+              <div className="h-40 animate-pulse rounded-xl bg-surface-tertiary/50" />
+              <div className="h-56 animate-pulse rounded-xl bg-surface-tertiary/50" />
+            </div>
+          </CargandoOError>
         </div>
       </div>
     );
@@ -104,9 +111,24 @@ export default function RetosPage() {
     const supabase = crearClienteNavegador();
     await guardarFlagsSalud(supabase, userId, flags);
     setFlagsSalud({ ...flags, completado: true });
+    if (retoPendiente) {
+      const reto = retoPendiente;
+      setRetoPendiente(null);
+      await iniciar(reto);
+    }
   }
 
+  // El cuestionario de seguridad ya no bloquea la pantalla: primero se muestra el reto recomendado
+  // (valor), y las 3 preguntas se piden solo al tocar "Empezar" por primera vez.
   async function empezarReto(reto: RetoDef, ciclo = 1) {
+    if (!flagsSalud?.completado) {
+      setRetoPendiente(reto);
+      return;
+    }
+    await iniciar(reto, ciclo);
+  }
+
+  async function iniciar(reto: RetoDef, ciclo = 1) {
     if (!userId) return;
     setProcesando(true);
     const supabase = crearClienteNavegador();
@@ -170,20 +192,25 @@ export default function RetosPage() {
       <TopHeader titulo="Retos" />
 
       <div className="relative mt-2 px-4 pb-8">
-        <motion.h1
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="font-display text-[20px] font-medium leading-[1.2] text-txt-primary"
-        >
-          Retos EVA
-        </motion.h1>
-        <p className="mt-1 text-[13px] text-txt-secondary">
+        <h1 className="sr-only">Retos EVA</h1>
+        <p className="mt-1 text-[14px] text-txt-secondary">
           Microexperimentos de 7 días — no dietas. Descubre qué necesita tu cuerpo.
         </p>
 
-        {!flagsSalud?.completado ? (
+        {retoPendiente && !flagsSalud?.completado ? (
           <div className="mt-5">
+            <p className="mb-3 text-[14px] text-txt-primary">
+              Antes de empezar <span className="font-semibold">{retoPendiente.nombre}</span>, 3 preguntas
+              rápidas para cuidarte.
+            </p>
             <CuestionarioSalud onCompletar={completarCuestionario} />
+            <button
+              type="button"
+              onClick={() => setRetoPendiente(null)}
+              className="mt-3 flex h-11 w-full items-center justify-center text-[13.5px] font-medium text-txt-tertiary"
+            >
+              Ahora no
+            </button>
           </div>
         ) : !retoActivo ? (
           <VistaRecomendacion checkins={estado.checkins} onEmpezar={empezarReto} procesando={procesando} />
@@ -229,15 +256,16 @@ function VistaRecomendacion({
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-5">
       <div className="relative overflow-hidden rounded-2xl border border-brand-primary/30 bg-gradient-to-br from-surface-primary to-brand-primary-soft/60 p-4 shadow-md">
-        <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] text-brand-primary">
+        <p className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.05em] text-brand-primary">
           <Sparkles className="h-3.5 w-3.5" /> Esta semana te toca
         </p>
-        <p className="mt-2 font-display text-[19px] font-medium text-txt-primary">
-          {recomendado.emoji} {recomendado.nombre}
-        </p>
+        <div className="mt-2 flex items-center gap-3">
+          <RetoIcono slug={recomendado.slug} />
+          <p className="font-display text-[19px] font-medium text-txt-primary">{recomendado.nombre}</p>
+        </div>
         <p className="mt-1.5 text-[13px] leading-relaxed text-txt-secondary">{recomendado.porQue}</p>
         <div className="mt-3 rounded-xl bg-surface-primary/70 p-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">Tu misión</p>
+          <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">Tu misión</p>
           <p className="mt-1 text-[13px] leading-relaxed text-txt-primary">{recomendado.mision}</p>
         </div>
         <div className="mt-3.5">
@@ -270,10 +298,10 @@ function VistaRecomendacion({
               className="flex w-full items-center justify-between rounded-xl border border-border-default/60 bg-surface-primary p-3.5 text-left shadow-sm"
             >
               <div className="flex items-center gap-2.5">
-                <span className="text-[18px]">{r.emoji}</span>
+                <RetoIcono slug={r.slug} tamano={32} />
                 <div>
                   <p className="text-[13px] font-medium text-txt-primary">{r.nombre}</p>
-                  <p className="text-[11px] text-txt-tertiary">{FAMILIA_LABEL[r.familia]} · 7 días</p>
+                  <p className="text-[12px] text-txt-tertiary">{FAMILIA_LABEL[r.familia]} · 7 días</p>
                 </div>
               </div>
             </button>
@@ -316,13 +344,14 @@ function VistaProgreso({
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-5">
       <div className="rounded-2xl border border-border-default/40 bg-surface-primary p-4 shadow-md">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">
           Día {diaEnRango} de {reto.duracionDias}
           {retoActivo.ciclo > 1 ? ` · semana ${retoActivo.ciclo}` : ""}
         </p>
-        <p className="mt-1.5 font-display text-[19px] font-medium text-txt-primary">
-          {reto.emoji} {reto.nombre}
-        </p>
+        <div className="mt-2 flex items-center gap-3">
+          <RetoIcono slug={reto.slug} />
+          <p className="font-display text-[19px] font-medium text-txt-primary">{reto.nombre}</p>
+        </div>
         <p className="mt-1.5 text-[13px] leading-relaxed text-txt-secondary">{reto.mision}</p>
 
         <div className="mt-3 flex gap-1">
@@ -427,7 +456,7 @@ function VistaResultado({
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-5">
       <div className="rounded-2xl border border-brand-primary/30 bg-gradient-to-br from-surface-primary to-brand-primary-soft/60 p-4 shadow-md">
-        <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.05em] text-brand-primary">
+        <p className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.05em] text-brand-primary">
           <Trophy className="h-3.5 w-3.5" /> {reto.nombre} · {diaActual} días
         </p>
         <p className="mt-2 font-display text-[19px] font-medium text-txt-primary">Tu cuerpo respondió</p>

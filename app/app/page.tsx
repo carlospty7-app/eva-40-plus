@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { Brain, Check, Cookie, Flame, Mic, Moon, Pencil, Square, Users, Utensils, Zap } from "lucide-react";
 import { TopHeader } from "@/components/app/interna/TopHeader";
+import { CargandoOError } from "@/components/app/ui/CargandoOError";
 import { EscalaCheckin } from "@/components/app/interna/EscalaCheckin";
 import { CelebracionDiaria } from "@/components/app/interna/CelebracionDiaria";
 import { CelebracionRacha } from "@/components/app/interna/CelebracionRacha";
@@ -70,6 +71,8 @@ export default function HoyPage() {
       .catch(() => setCheckinsHoyComunidad(null));
   }, []);
 
+  const [mostrarNotas, setMostrarNotas] = useState(false);
+
   useEffect(() => {
     const supabase = crearClienteNavegador();
     supabase.auth.getUser().then(async ({ data }) => {
@@ -82,6 +85,7 @@ export default function HoyPage() {
       if (yaExiste) {
         setResultadoHoy(yaExiste);
         setNotas(yaExiste.notas ?? "");
+        if (yaExiste.notas) setMostrarNotas(true);
         setFase("resultado");
       } else {
         setFase("form");
@@ -158,9 +162,13 @@ export default function HoyPage() {
     return (
       <div className="relative min-h-dvh">
         <TopHeader titulo="EVA 40+" logo />
-        <div className="mt-6 space-y-3 px-4">
-          <div className="h-24 animate-pulse rounded-xl bg-surface-tertiary/50" />
-          <div className="h-40 animate-pulse rounded-xl bg-surface-tertiary/50" />
+        <div className="px-4">
+          <CargandoOError>
+            <div className="mt-6 space-y-3">
+              <div className="h-24 animate-pulse rounded-xl bg-surface-tertiary/50" />
+              <div className="h-40 animate-pulse rounded-xl bg-surface-tertiary/50" />
+            </div>
+          </CargandoOError>
         </div>
       </div>
     );
@@ -204,13 +212,13 @@ export default function HoyPage() {
             return (
               <span
                 key={d.fecha}
-                className={`flex h-7 w-7 items-center justify-center rounded-full text-[10.5px] font-semibold ${
+                className={`flex h-9 w-9 items-center justify-center rounded-full text-[13px] font-semibold ${
                   d.completado
                     ? "bg-brand-primary-soft text-brand-primary"
                     : "bg-surface-tertiary/60 text-txt-tertiary"
                 } ${hoyDia ? "ring-2 ring-brand-primary/50" : ""}`}
               >
-                {d.completado ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : d.dia}
+                {d.completado ? <Check className="h-4 w-4" strokeWidth={3} /> : d.dia}
               </span>
             );
           })}
@@ -225,15 +233,23 @@ export default function HoyPage() {
               exit={{ opacity: 0 }}
               className="relative mt-5 rounded-xl border border-border-default/60 bg-surface-primary p-4 shadow-sm"
             >
-              <p className="text-[13px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
-                Revisión rápida de 60 segundos
-              </p>
-              <p className="mt-1 text-[12px] text-txt-tertiary">
-                Esto nos ayuda a encontrar tu prioridad de hoy.
+              <p className="font-display text-[19px] font-medium text-txt-primary">Tu revisión de hoy</p>
+              <p className="mt-1 text-[13px] text-txt-secondary">
+                6 toques, 60 segundos. Elige cómo te sientes y te digo tu prioridad de hoy.
               </p>
 
               <div className="mt-3">
-                <label className="text-[12px] font-medium text-txt-secondary" htmlFor="notas-checkin">
+                {!mostrarNotas ? (
+                  <button
+                    type="button"
+                    onClick={() => setMostrarNotas(true)}
+                    className="flex h-11 items-center gap-1.5 text-[13.5px] font-medium text-brand-primary"
+                  >
+                    + Agregar una nota (opcional)
+                  </button>
+                ) : (
+                <>
+                <label className="text-[13px] font-medium text-txt-secondary" htmlFor="notas-checkin">
                   ¿Cómo te sientes hoy y qué te gustaría lograr? (opcional)
                 </label>
                 <div className="relative mt-1.5">
@@ -259,6 +275,8 @@ export default function HoyPage() {
                     </button>
                   )}
                 </div>
+                </>
+                )}
               </div>
 
               <div className="mt-3 divide-y divide-border-default/60">
@@ -366,7 +384,7 @@ export default function HoyPage() {
               >
                 <ScoreRing value={computeScoreDia(resultadoHoy!)} size={76} thickness={8} color="accent" />
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
                     Tu puntaje de hoy
                   </p>
                   <p className="mt-1 text-[13px] text-txt-secondary">
@@ -447,7 +465,7 @@ export default function HoyPage() {
                   className="flex items-center justify-between rounded-xl bg-surface-tertiary/50 p-4"
                 >
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-txt-tertiary">
                       Tu misión de hoy en Mi Ruta
                     </p>
                     <p className="mt-1 text-[13.5px] font-medium text-txt-primary">

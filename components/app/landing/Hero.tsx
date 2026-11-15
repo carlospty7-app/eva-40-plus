@@ -33,10 +33,10 @@ export function Hero() {
         <div>
           <motion.p
             variants={item}
-            className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-txt-inverse/85"
+            className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.1em] text-txt-inverse/85"
           >
             <Sparkles className="h-3.5 w-3.5" />
-            Diagnóstico gratis en 5 minutos
+            Diagnóstico gratis en 2 minutos
           </motion.p>
           <motion.h1
             variants={item}
@@ -92,7 +92,7 @@ export function Hero() {
               </div>
             ))}
           </div>
-          <p className="mt-4 text-[10.5px] text-txt-tertiary">
+          <p className="mt-4 text-[12px] text-txt-tertiary">
             Ejemplo de tu diagnóstico — tu resultado real se genera para ti
           </p>
         </motion.div>

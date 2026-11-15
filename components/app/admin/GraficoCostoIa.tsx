@@ -8,7 +8,7 @@ export function GraficoCostoIa({ datos }: { datos: PuntoSerie[] }) {
 
   return (
     <div className="rounded-xl border border-border-default/60 bg-surface-primary p-4 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">
+      <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">
         Gasto de IA — últimos 14 días
       </p>
 

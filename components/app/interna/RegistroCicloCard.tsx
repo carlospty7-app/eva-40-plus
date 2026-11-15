@@ -72,7 +72,7 @@ export function RegistroCicloCard({
             <p className="text-[13px] font-medium text-txt-primary">
               {registroDelDia ? "Ya registraste tu ciclo hoy" : "Registra tu ciclo (opcional)"}
             </p>
-            <p className="text-[11.5px] text-txt-tertiary">Sin calendario, sin predicciones — solo lo que notas hoy.</p>
+            <p className="text-[12px] text-txt-tertiary">Sin calendario, sin predicciones — solo lo que notas hoy.</p>
           </div>
         </div>
         <span className="shrink-0 text-[12px] font-semibold text-brand-primary">

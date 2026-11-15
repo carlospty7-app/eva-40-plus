@@ -10,6 +10,7 @@ import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
 import { Logo } from "@/components/app/ui/Logo";
 import { leerDiagnostico, type DiagnosticoGuardado } from "@/lib/onboarding/storage";
 import { crearClienteNavegador } from "@/lib/supabase/client";
+import { leerOferta, type Oferta } from "@/lib/oferta";
 
 const FALLBACK: DiagnosticoGuardado = {
   score: 72,
@@ -57,8 +58,6 @@ function AnimatedScore({ value }: { value: number }) {
   return <span className="tabular-nums">{display}</span>;
 }
 
-type Oferta = "pagado" | "gratis";
-
 export default function PaywallPage() {
   const router = useRouter();
   const [plan, setPlan] = useState<"anual" | "mensual">("anual");
@@ -75,8 +74,7 @@ export default function PaywallPage() {
   useEffect(() => {
     const saved = leerDiagnostico();
     if (saved) setData(saved);
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("oferta") === "gratis") setOferta("gratis");
+    setOferta(leerOferta());
   }, []);
 
   useEffect(() => {
@@ -331,7 +329,7 @@ export default function PaywallPage() {
 
       <div className="relative mt-4 flex items-center justify-center gap-2 text-[11.5px] text-txt-tertiary">
         <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-        <span>Garantía 7 días · Pago seguro · Stripe</span>
+        <span>Si no te sirve, te devolvemos tu pago · Stripe</span>
       </div>
       </div>
 

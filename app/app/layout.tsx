@@ -1,4 +1,9 @@
+import type { Metadata } from "next";
 import { BottomNav } from "@/components/app/interna/BottomNav";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function AppInternaLayout({ children }: { children: React.ReactNode }) {
   return (

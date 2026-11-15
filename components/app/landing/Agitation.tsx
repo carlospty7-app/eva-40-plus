@@ -34,7 +34,7 @@ export function Agitation() {
                   <Frown className="h-[18px] w-[18px]" />
                 </div>
                 <p className="mt-2 text-[12px] font-semibold text-txt-primary">{t.label}</p>
-                <p className="mt-0.5 max-w-[80px] text-[11px] leading-snug text-txt-tertiary">
+                <p className="mt-0.5 max-w-[80px] text-[12px] leading-snug text-txt-tertiary">
                   {t.note}
                 </p>
               </div>

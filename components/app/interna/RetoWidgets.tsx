@@ -34,7 +34,7 @@ export function MenuDelDiaReto({ menu }: { menu: MenuRetoDia }) {
               </button>
             )}
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">{f.label}</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.05em] text-txt-tertiary">{f.label}</p>
               <p className="mt-0.5 text-[13px] leading-snug text-txt-secondary">{f.texto}</p>
             </div>
           </div>

@@ -16,7 +16,7 @@ export function Section({
 
 export function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-primary/80">
+    <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-brand-primary/80">
       {children}
     </p>
   );

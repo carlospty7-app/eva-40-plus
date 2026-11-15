@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { ChevronLeft, ChevronRight, Droplet, Heart, Lightbulb, Scale, Sparkles } from "lucide-react";
 import { TopHeader } from "@/components/app/interna/TopHeader";
+import { CargandoOError } from "@/components/app/ui/CargandoOError";
 import { BotanicalGlow } from "@/components/app/ui/BotanicalGlow";
 import { RegistroCicloCard } from "@/components/app/interna/RegistroCicloCard";
 import { crearClienteNavegador } from "@/lib/supabase/client";
@@ -119,9 +120,13 @@ export default function CicloPage() {
     return (
       <div className="relative min-h-dvh">
         <TopHeader titulo="Tu ciclo" />
-        <div className="mt-6 space-y-3 px-4">
-          <div className="h-72 animate-pulse rounded-2xl bg-surface-tertiary/50" />
-          <div className="h-32 animate-pulse rounded-xl bg-surface-tertiary/50" />
+        <div className="px-4">
+          <CargandoOError>
+            <div className="mt-6 space-y-3">
+              <div className="h-72 animate-pulse rounded-2xl bg-surface-tertiary/50" />
+              <div className="h-32 animate-pulse rounded-xl bg-surface-tertiary/50" />
+            </div>
+          </CargandoOError>
         </div>
       </div>
     );
@@ -167,23 +172,23 @@ export default function CicloPage() {
               type="button"
               onClick={() => cambiarMes(-1)}
               aria-label="Mes anterior"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-txt-tertiary"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-txt-tertiary"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <p className="text-[13.5px] font-semibold text-txt-primary">{nombreMes(cursor.anio, cursor.mes)}</p>
+            <p className="text-[15px] font-semibold text-txt-primary">{nombreMes(cursor.anio, cursor.mes)}</p>
             <button
               type="button"
               onClick={() => cambiarMes(1)}
               aria-label="Mes siguiente"
               disabled={cursor.anio === new Date().getFullYear() && cursor.mes === new Date().getMonth()}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-txt-tertiary disabled:opacity-30"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-txt-tertiary disabled:opacity-30"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[10px] font-semibold uppercase text-txt-tertiary">
+          <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[12px] font-semibold uppercase text-txt-tertiary">
             {["L", "M", "X", "J", "V", "S", "D"].map((d) => (
               <span key={d}>{d}</span>
             ))}
@@ -205,7 +210,7 @@ export default function CicloPage() {
                   type="button"
                   disabled={esFuturo}
                   onClick={() => setDiaSeleccionado(iso)}
-                  className={`relative flex h-9 flex-col items-center justify-center rounded-full text-[11.5px] transition-colors disabled:opacity-30 ${
+                  className={`relative flex h-10 flex-col items-center justify-center rounded-full text-[13px] transition-colors disabled:opacity-30 ${esHoy ? "font-bold" : ""} ${
                     diaSeleccionado === iso
                       ? "bg-brand-primary text-txt-inverse"
                       : registro?.sangrado
@@ -227,7 +232,7 @@ export default function CicloPage() {
             })}
           </div>
 
-          <div className="mt-3 flex items-center gap-4 text-[11px] text-txt-tertiary">
+          <div className="mt-3 flex items-center gap-4 text-[12px] text-txt-tertiary">
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full bg-brand-accent" /> Sangrado
             </span>
@@ -253,25 +258,38 @@ export default function CicloPage() {
         )}
 
         {/* Resumen del mes */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="mt-4 grid grid-cols-2 gap-3"
-        >
-          <div className="rounded-xl border border-border-default/60 bg-surface-primary p-3.5 text-center shadow-sm">
-            <p className="font-display text-[22px] font-medium text-txt-primary">{diasSangradoMes}</p>
-            <p className="mt-0.5 text-[11px] text-txt-tertiary">Días de sangrado este mes</p>
-          </div>
-          <div className="rounded-xl border border-border-default/60 bg-surface-primary p-3.5 text-center shadow-sm">
-            <p className="font-display text-[22px] font-medium text-txt-primary">
-              {promedioCiclo ?? "—"}
+        {diasSangradoMes === 0 && !promedioCiclo ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mt-4 flex items-start gap-2.5 rounded-xl border border-dashed border-border-strong bg-surface-primary p-4"
+          >
+            <Droplet className="mt-0.5 h-4 w-4 shrink-0 text-brand-accent" />
+            <p className="text-[14px] leading-relaxed text-txt-secondary">
+              Cuando registres algunos días, aquí verás tu resumen del mes y, con el tiempo, los patrones que
+              se repiten en tu cuerpo. Toca un día del calendario para empezar.
             </p>
-            <p className="mt-0.5 text-[11px] text-txt-tertiary">
-              {promedioCiclo ? "Días promedio entre tus períodos (histórico)" : "Aún sin suficiente historial"}
-            </p>
-          </div>
-        </motion.div>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mt-4 grid grid-cols-2 gap-3"
+          >
+            <div className="rounded-xl border border-border-default/60 bg-surface-primary p-3.5 text-center shadow-sm">
+              <p className="font-display text-[22px] font-medium text-txt-primary">{diasSangradoMes}</p>
+              <p className="mt-0.5 text-[13px] text-txt-tertiary">Días de sangrado este mes</p>
+            </div>
+            <div className="rounded-xl border border-border-default/60 bg-surface-primary p-3.5 text-center shadow-sm">
+              <p className="font-display text-[22px] font-medium text-txt-primary">{promedioCiclo ?? "—"}</p>
+              <p className="mt-0.5 text-[13px] text-txt-tertiary">
+                {promedioCiclo ? "Días promedio entre tus períodos (histórico)" : "Aún sin suficiente historial"}
+              </p>
+            </div>
+          </motion.div>
+        )}
 
         {/* Correlaciones reales */}
         {insights.length > 0 && (
@@ -300,7 +318,7 @@ export default function CicloPage() {
           <p className="flex items-center gap-2 text-[12.5px] font-semibold text-txt-primary">
             <Scale className="h-4 w-4 text-brand-primary" /> Peso y talla
           </p>
-          <p className="mt-0.5 text-[11.5px] text-txt-tertiary">
+          <p className="mt-0.5 text-[12px] text-txt-tertiary">
             {ultimaMedida?.pesoKg
               ? `Último registro: ${ultimaMedida.pesoKg} kg el ${ultimaMedida.fecha}`
               : "Opcional — solo si quieres ver cómo se relaciona con tu ciclo."}
@@ -327,10 +345,15 @@ export default function CicloPage() {
             type="button"
             onClick={guardarMedida}
             disabled={guardandoMedida || (!peso && !cintura)}
-            className="mt-3 flex h-10 w-full items-center justify-center rounded-full bg-brand-primary text-[13px] font-semibold text-txt-inverse disabled:opacity-50"
+            className="mt-3 flex h-11 w-full items-center justify-center rounded-full bg-brand-primary text-[14px] font-semibold text-txt-inverse disabled:opacity-50"
           >
             {guardandoMedida ? "Guardando…" : "Guardar de hoy"}
           </button>
+          {!peso && !cintura && (
+            <p className="mt-1.5 text-center text-[12px] text-txt-tertiary">
+              Escribe tu peso o tu cintura para poder guardar.
+            </p>
+          )}
         </motion.div>
 
         {/* Conexión con Mi Ruta */}
@@ -345,14 +368,14 @@ export default function CicloPage() {
               </span>
               <div>
                 <p className="text-[13px] font-medium text-txt-primary">Ve tu Ruta de hoy</p>
-                <p className="text-[11.5px] text-txt-tertiary">Ajusta lo que necesites según cómo te sientes</p>
+                <p className="text-[12px] text-txt-tertiary">Ajusta lo que necesites según cómo te sientes</p>
               </div>
             </div>
             <span className="shrink-0 text-[12px] font-semibold text-brand-primary">Ir →</span>
           </Link>
         </motion.div>
 
-        <p className="mt-4 flex items-center gap-1.5 text-[11px] text-txt-tertiary">
+        <p className="mt-4 flex items-center gap-1.5 text-[12px] text-txt-tertiary">
           <Droplet className="h-3 w-3" /> Toca cualquier día pasado del calendario para registrarlo o editarlo.
         </p>
       </div>

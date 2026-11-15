@@ -23,7 +23,7 @@ export function ResultScreen({
       <motion.p
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-primary/80"
+        className="text-[12px] font-semibold uppercase tracking-[0.1em] text-brand-primary/80"
       >
         Tu diagnóstico está listo
       </motion.p>
@@ -62,7 +62,7 @@ export function ResultScreen({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="mt-6 text-[11px] font-semibold uppercase tracking-[0.1em] text-txt-tertiary"
+        className="mt-6 text-[12px] font-semibold uppercase tracking-[0.1em] text-txt-tertiary"
       >
         Tus 3 prioridades de esta semana
       </motion.p>
@@ -79,7 +79,7 @@ export function ResultScreen({
               <p className="text-[13.5px] font-semibold text-txt-primary">{p.title}</p>
               <p className="text-[12px] text-txt-tertiary">{p.detail}</p>
             </div>
-            <span className="shrink-0 rounded-full bg-brand-primary-soft px-2.5 py-1 text-[10px] font-bold text-brand-primary">
+            <span className="shrink-0 rounded-full bg-brand-primary-soft px-2.5 py-1 text-[12px] font-bold text-brand-primary">
               {p.tag}
             </span>
           </motion.div>

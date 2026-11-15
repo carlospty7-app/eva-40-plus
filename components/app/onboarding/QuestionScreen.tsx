@@ -82,7 +82,7 @@ export function QuestionScreen({
   return (
     <div className="flex flex-1 flex-col justify-center px-4 pb-16">
       {eyebrow && (
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-primary/80">
+        <p className="mb-2 text-[12px] font-semibold uppercase tracking-[0.1em] text-brand-primary/80">
           {eyebrow}
         </p>
       )}
@@ -133,7 +133,7 @@ export function QuestionScreen({
             className="mt-4 rounded-xl bg-brand-primary-soft px-4 py-3 text-left text-[13px] leading-relaxed text-brand-primary"
           >
             {insight}
-            <span className="mt-1 block text-[11px] font-semibold opacity-70">Toca para continuar</span>
+            <span className="mt-1 block text-[12px] font-semibold opacity-70">Toca para continuar</span>
           </motion.button>
         )}
       </AnimatePresence>
